@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@theme {
+  /* 1. MARCA (Verdes y Azules del Logo) */
+  --color-primary: #02B446;
+  --color-primary-light: #E6F7EC;
+  --color-primary-dark: #028A36;
+
+  --color-secondary: #1976D2;
+  --color-secondary-light: #E3F2FD;
+  --color-secondary-dark: #172C6B;
+
+  --color-accent-purple: #952B97;
+  --color-accent-orange: #FCAA18;
+
+  /* 2. FEEDBACK (Estados funcionales) */
+  --color-success: #02B446;
+  --color-success-light: #E6F7EC;
+  --color-success-dark: #028A36;
+
+  --color-error: #FC1C27;
+  --color-error-light: #FFF0F1;
+  --color-error-dark: #D9121C;
+
+  --color-warning: #FCAA18;
+  --color-warning-light: #FFF8E6;
+
+  --color-info: #1976D2;
+  --color-info-light: #E3F2FD;
+
+  /* 3. NEUTROS (Texto y Superficies) */
+  --color-heading: #172C6B;
+
+  --color-text: #1A1A2E;
+  --color-text-secondary: #5A5A7A;
+
+  --color-border: #E0E0E0;
+
+  --color-surface: #F5F5F5;
+  --color-surface-hover: #EEEEEE;
+  --color-surface-paper: #FFFFFF;
+
+  /* Compatibilidad Legacy: Mapeamos el antiguo background al nuevo surface-paper */
+  --color-background: var(--color-surface-paper);
+
+  /* 2. Tipografía */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Tamaños y pesos */
+  --font-size-h1: 24px;
+  --font-size-h2: 20px;
+  --font-size-h3: 16px;
+  --font-size-body: 14px;
+  --font-size-caption: 12px;
+  --font-size-overline: 11px;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: 20px;
+
+  /* Layout y sombras */
+  --shadow-cards: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-modals: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Breakpoints: mobile-first, md=768px lg=1024px */
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+
+  /* Alias de Espaciado (Base = 8px) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* ATENCIÓN (defecto UAT, 2026-09-03): al definir --spacing-{xs,sm,md,lg,xl} arriba, Tailwind
+     v4 le da prioridad a esa escala por sobre la escala de contenedor (--container-*) para
+     CUALQUIER utilidad que comparta el mismo nombre de tamaño — max-w-sm, max-w-md, max-w-lg,
+     max-w-xl, max-w-xs (y probablemente w-, min-w- y h- con esos mismos nombres) terminan
+     resolviendo contra esta escala de 4/8/16/24/32px en vez de los ~320-576px esperados de
+     Tailwind. Definir --container-sm explícito NO alcanza para revertirlo — se probó y
+     verificó contra el CSS compilado real: --spacing-* sigue ganando. La única forma segura de
+     evitar esto sin renombrar toda la escala de spacing del proyecto (cientos de usos de
+     p-sm/gap-lg/px-md/etc.) es NO USAR max-w-xs/sm/md/lg/xl en ningún componente nuevo — usar
+     un valor arbitrario en su lugar (ej. max-w-[24rem]).
+  */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-heading);
+    font-weight: 700;
+    font-family: var(--font-display);
+  }
+
+  h1 {
+    font-size: var(--font-size-h1);
+  }
+
+  h2 {
+    font-size: var(--font-size-h2);
+  }
+
+  h3 {
+    font-size: var(--font-size-h3);
+  }
+
+  /* Fix iOS Input Zoom (Standard: 16px min) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    font-family: var(--font-sans);
+  }
+
+  /* US-ORD-04: Quitar flechas de inputs numéricos */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+@keyframes pulse-subtle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
