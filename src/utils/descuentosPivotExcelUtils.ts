@@ -47,7 +47,7 @@ export async function exportDescuentosPivotToExcel(grupos: GrupoCostosPivot[], f
 
     const timestamp = new Date().toLocaleString('es-SV', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const filas: (string | number)[][] = [
-        ['IMPORFRUT - SISTEMA DE GESTIÓN OPERATIVA'],
+        ['TEKNERGY - SISTEMA DE GESTIÓN OPERATIVA'],
         ['REPORTE: ESTADO DE DESCUENTOS'],
         [`Generado: ${timestamp}`, `Usuario: ${generadoPor}`],
         [],

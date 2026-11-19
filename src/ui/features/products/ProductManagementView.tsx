@@ -208,7 +208,7 @@ export const ProductManagementView: React.FC = () => {
         ];
 
         const workbook = utils.book_new();
-        utils.book_append_sheet(workbook, worksheet, 'Lotes_ImporFrut');
+        utils.book_append_sheet(workbook, worksheet, 'Lotes_Teknergy');
 
         writeFile(workbook, 'PlantillaBase_Lotes.xlsx');
 

@@ -203,7 +203,7 @@ export const OrderListView: React.FC<{
             }
             const formatted = formatOrdersForExcel(allOrders);
             const dateStr = new Date().toISOString().split('T')[0];
-            exportToExcel(formatted, `pedidos_imporfrut_${dateStr}`);
+            exportToExcel(formatted, `pedidos_teknergy_${dateStr}`);
 
             // Auditoría de Reportes (US-AUD-01)
             import('../../../services/auditService').then(({ auditService }) => {

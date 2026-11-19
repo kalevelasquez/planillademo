@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock } from 'lucide-react';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 import { authService } from '../../../services/authService';
 import { useAuthStore } from '../../../store/authStore';
 import { Button } from '../../components/Button';
@@ -51,7 +51,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onForgotPassword, initialE
             <div className="w-full max-w-[400px] bg-white p-lg rounded-lg shadow-cards border border-border">
                 {/* Header con estilo de Design System */}
                 <div className="flex flex-col items-center mb-xl">
-                    <img src={BrandLogo} alt="Logo ImporFrut" className="h-36 w-auto object-contain" />
+                    <img src={BrandLogo} alt="Logo Teknergy" className="h-20 w-auto max-w-full object-contain" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-md">
@@ -105,7 +105,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onForgotPassword, initialE
 
                     <footer className="mt-lg text-center">
                         <p className="text-caption text-text-secondary">
-                            © 2026 Teknergy Inc. — ImporFrut v1.0
+                            © 2026 Teknergy Inc. — v1.0
                         </p>
                     </footer>
                 </form>

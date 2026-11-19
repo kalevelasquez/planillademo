@@ -186,7 +186,7 @@ export const useReportExplorer = () => {
                 <Document>
                     <Page size="A4" style={styles.page}>
                         <View style={styles.header}>
-                            <Text style={styles.title}>IMPORFRUT - Reporte</Text>
+                            <Text style={styles.title}>TEKNERGY - Reporte</Text>
                             <Text style={styles.meta}>{getReportTitle()}</Text>
                             <Text style={styles.meta}>{t('reports.report_filter_period')} {dateRange.start} al {dateRange.end}</Text>
                             <Text style={styles.meta}>{t('reports.report_generated_at')} {new Date().toLocaleString()}</Text>
@@ -228,7 +228,7 @@ export const useReportExplorer = () => {
                         ))}
 
                         <Text style={styles.footer} render={({ pageNumber, totalPages }) => (
-                            `Página ${pageNumber} de ${totalPages} - Teknergy ImporFrut System`
+                            `Página ${pageNumber} de ${totalPages} - Teknergy System`
                         )} fixed />
                     </Page>
                 </Document>

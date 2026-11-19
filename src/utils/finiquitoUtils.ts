@@ -106,14 +106,14 @@ const MOTIVO_VACACIONES_COMPLETAS_PENDIENTE =
     'PENDIENTE DE DEFINIR — el CA1 de IMPL-162 pide "Vacaciones Completas" Y "Vacación ' +
     'Proporcional" como líneas separadas, pero el único dato de días pendientes que existe hoy ' +
     '(`VacacionesResumenSection`) ya incluye el año en curso dentro de su cálculo — combinarlo ' +
-    'tal cual con la Proporcional pagaría dos veces el año actual. Pregunta enviada a Imporfrut ' +
+    'tal cual con la Proporcional pagaría dos veces el año actual. Pregunta enviada a Teknergy ' +
     '(2026-09-21) sobre qué representa exactamente "Completas" en el documento real (Melvin/Dora), ' +
     'sin responder todavía.';
 
 const MOTIVO_AGUINALDO_COMPLETO_PENDIENTE =
     'PENDIENTE DE DEFINIR — mismo motivo que Vacaciones Completas: no existe hoy un cálculo de ' +
     '"Aguinaldo Completo" separado del proporcional del año en curso. Misma pregunta enviada a ' +
-    'Imporfrut (2026-09-21), sin responder todavía.';
+    'Teknergy (2026-09-21), sin responder todavía.';
 
 /**
  * CONFIRMADO por Imporfrut (2026-09-21): la categoría se toma tal cual la ingresó el usuario en

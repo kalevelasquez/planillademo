@@ -16,7 +16,7 @@ export async function generateConstanciaRetencionesDocxBlob(datos: ConstanciaRet
         HeadingLevel, AlignmentType, WidthType, BorderStyle,
     } = await importWithRetry(() => import('docx'), "la librería 'docx'");
 
-    const logoModule = await importWithRetry(() => import('../assets/images/logo-imporfrut.png'), 'el logo del reporte');
+    const logoModule = await importWithRetry(() => import('../assets/images/logo-teknergy.png'), 'el logo del reporte');
     const logoBuffer = await fetch(logoModule.default).then((r) => r.arrayBuffer());
 
     const bordeNinguno = {
@@ -56,7 +56,7 @@ export async function generateConstanciaRetencionesDocxBlob(datos: ConstanciaRet
             children: [
                 // Mismo criterio de proporción real del logo que `constanciaSalarioDocxUtils.ts`
                 // (docx exige width Y height explícitos, a diferencia de @react-pdf/renderer).
-                new Paragraph({ children: [new ImageRun({ data: logoBuffer, transformation: { width: 90, height: 88 }, type: 'png' })] }),
+                new Paragraph({ children: [new ImageRun({ data: logoBuffer, transformation: { width: 160, height: 40 }, type: 'png' })] }),
                 new Paragraph({ text: '', spacing: { after: 100 } }),
                 ...(datos.razonSocialEmpresa ? [new Paragraph({ text: datos.razonSocialEmpresa })] : []),
                 ...(datos.nitEmpresa ? [new Paragraph({ text: datos.nitEmpresa, spacing: { after: 200 } })] : []),

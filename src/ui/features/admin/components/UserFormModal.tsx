@@ -148,7 +148,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
                     <InputField
                         label={t('users.input_email')}
                         type="email"
-                        placeholder="ejemplo@imporfrut.com"
+                        placeholder="ejemplo@teknergy.com"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         disabled={!!user} // El email no se edita por regla de auth normal

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 
 const COLOR = { secondary: '#1E293B', muted: '#64748B', border: '#E2E8F0', white: '#FFFFFF' };
 
 const styles = StyleSheet.create({
     page: { padding: 56, paddingTop: 48, fontFamily: 'Helvetica', fontSize: 11, color: COLOR.secondary, backgroundColor: COLOR.white },
-    logo: { width: 110, marginBottom: 30 },
+    logo: { width: 150, marginBottom: 30 },
     titulo: { fontSize: 13, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
     destinatario: { fontSize: 11, fontWeight: 'bold', marginBottom: 20, textTransform: 'uppercase' },
     parrafo: { fontSize: 11, lineHeight: 1.6, marginBottom: 14, textAlign: 'justify' },

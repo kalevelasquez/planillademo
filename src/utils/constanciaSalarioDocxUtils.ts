@@ -19,7 +19,7 @@ export async function generateConstanciaSalarioDocxBlob(datos: ConstanciaSalario
         HeadingLevel, AlignmentType, WidthType, BorderStyle,
     } = await importWithRetry(() => import('docx'), "la librería 'docx'");
 
-    const logoModule = await importWithRetry(() => import('../assets/images/logo-imporfrut.png'), 'el logo del reporte');
+    const logoModule = await importWithRetry(() => import('../assets/images/logo-teknergy.png'), 'el logo del reporte');
     const logoBuffer = await fetch(logoModule.default).then((r) => r.arrayBuffer());
 
     const bordeNinguno = {
@@ -56,7 +56,7 @@ export async function generateConstanciaSalarioDocxBlob(datos: ConstanciaSalario
                 // rectángulo ancho que usa el header del PDF (@react-pdf/renderer sí respeta el
                 // aspect-ratio automáticamente con solo `width`; `docx` exige width Y height
                 // explícitos, así que hay que calcularlos a mano o el logo sale aplastado).
-                new Paragraph({ children: [new ImageRun({ data: logoBuffer, transformation: { width: 90, height: 88 }, type: 'png' })] }),
+                new Paragraph({ children: [new ImageRun({ data: logoBuffer, transformation: { width: 160, height: 40 }, type: 'png' })] }),
                 new Paragraph({ text: '', spacing: { after: 200 } }),
                 new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: 'CONSTANCIA DE SALARIO', bold: true })] }),
                 new Paragraph({ children: [new TextRun({ text: 'A QUIEN INTERESE:', bold: true })], spacing: { after: 200 } }),

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 import type { FiniquitoDatos, MontoOPendiente } from '../../../utils/finiquitoUtils';
 
 const COLOR = {
@@ -10,7 +10,7 @@ const COLOR = {
 
 const styles = StyleSheet.create({
     page: { padding: 40, paddingTop: 36, fontFamily: 'Helvetica', fontSize: 9, color: COLOR.secondary, backgroundColor: COLOR.white },
-    logo: { width: 90, marginBottom: 14 },
+    logo: { width: 130, marginBottom: 14 },
     empresaLinea: { fontSize: 9, marginBottom: 1 },
     titulo: { fontSize: 13, fontWeight: 'bold', marginTop: 10, marginBottom: 10, textTransform: 'uppercase' },
     subtitulo: { fontSize: 9.5, fontWeight: 'bold', color: COLOR.muted, textTransform: 'uppercase', marginTop: 12, marginBottom: 4 },

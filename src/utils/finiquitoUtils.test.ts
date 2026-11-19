@@ -121,10 +121,10 @@ describe('calcularFiniquitoDatos (IMPL-162 CA1/CA4 — reusa Liquidación Labora
         expect(datos.aguinaldoCompleto.estado).toBe('pendiente_definir');
     });
 
-    it('Vacaciones Completas y Aguinaldo Completo documentan que la pregunta ya se envió a Imporfrut', () => {
+    it('Vacaciones Completas y Aguinaldo Completo documentan que la pregunta ya se envió a Teknergy', () => {
         const datos = calcularFiniquitoDatos({ empleado, liquidacion, ultimoCalculo });
-        if (datos.vacacionesCompletas.estado === 'pendiente_definir') expect(datos.vacacionesCompletas.motivo).toMatch(/enviada a Imporfrut/i);
-        if (datos.aguinaldoCompleto.estado === 'pendiente_definir') expect(datos.aguinaldoCompleto.motivo).toMatch(/enviada a Imporfrut/i);
+        if (datos.vacacionesCompletas.estado === 'pendiente_definir') expect(datos.vacacionesCompletas.motivo).toMatch(/enviada a Teknergy/i);
+        if (datos.aguinaldoCompleto.estado === 'pendiente_definir') expect(datos.aguinaldoCompleto.motivo).toMatch(/enviada a Teknergy/i);
     });
 
     it('Vacación/Aguinaldo Proporcional vienen EXACTOS de Liquidación Laboral, no se recalculan', () => {

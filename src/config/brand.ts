@@ -1,7 +1,7 @@
 /**
  * brand.ts
  * ─────────────────────────────────────────────────────────────────
- * Fuente única de verdad para la identidad de marca ImporFrut.
+ * Fuente única de verdad para la identidad de marca Teknergy.
  * Aparece en: PDF, mensajes de WhatsApp, y cualquier canal de comunicación.
  *
  * Para cambiar datos de contacto o textos legales, edita ÚNICAMENTE este archivo.
@@ -9,16 +9,16 @@
 
 export const BRAND = {
     /** Nombre corto de la empresa (encabezado PDF, mensajes WA) */
-    NAME: 'IMPORFRUT',
+    NAME: 'TEKNERGY',
 
     /** Razón social o descripción larga (tagline PDF) */
-    TAGLINE: 'Calidad y Frescura en cada Entrega',
+    TAGLINE: 'El poder de la tecnología',
 
     /** País de operación */
     COUNTRY: 'El Salvador',
 
     /** Email de soporte al cliente */
-    SUPPORT_EMAIL: 'soporte@imporfrut.com',
+    SUPPORT_EMAIL: 'alexis.velasquez@teknergy.com',
 
     /**
      * Teléfono de Bodega en formato DB (503XXXXXXXX — sin '+', sin guiones).

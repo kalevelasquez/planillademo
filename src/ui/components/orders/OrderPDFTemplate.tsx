@@ -9,7 +9,7 @@ import {
 } from '@react-pdf/renderer';
 import type { Customer } from '../../../services/customerService';
 import type { OrderItem } from '../../../store/orderStore';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 
 // ─────────────────────────────────────────────────────────────────
 // Diseño Premium ImporFrut
@@ -271,7 +271,7 @@ export const OrderPDFTemplate: React.FC<OrderPDFProps> = ({
     const total = Math.max(0, subtotal - (discount_amount || 0));
 
     return (
-        <Document title={`Pedido ${orderNumber} - ImporFrut`}>
+        <Document title={`Pedido ${orderNumber} - Teknergy`}>
             <Page size="A4" style={styles.page}>
                 {/* Header */}
                 <View style={styles.header}>
@@ -302,8 +302,8 @@ export const OrderPDFTemplate: React.FC<OrderPDFProps> = ({
                     <View style={styles.infoSection}>
                         <Text style={styles.sectionLabel}>Atendido Por</Text>
                         <Text style={styles.infoName}>{sellerName}</Text>
-                        <Text style={styles.infoText}>ImporFrut S.A. de C.V.</Text>
-                        <Text style={styles.infoText}>info@imporfrut.com</Text>
+                        <Text style={styles.infoText}>Teknergy Inc.</Text>
+                        <Text style={styles.infoText}>alexis.velasquez@teknergy.com</Text>
                     </View>
                 </View>
 
@@ -385,7 +385,7 @@ export const OrderPDFTemplate: React.FC<OrderPDFProps> = ({
 
                 {/* Sticky Branding Footer */}
                 <View style={styles.brandingFooter} fixed>
-                    <Text style={styles.brandingText}>ImporFrut S.A. de C.V. • El Salvador • {new Date().getFullYear()}</Text>
+                    <Text style={styles.brandingText}>Teknergy Inc. • El Salvador • {new Date().getFullYear()}</Text>
                     <Text style={styles.brandingText} render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
                 </View>
             </Page>

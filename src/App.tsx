@@ -104,7 +104,7 @@ import { ROLES } from './config/constants';
 import { TableSkeleton } from './ui/components/Skeleton';
 import ReloadPrompt from './ui/components/ReloadPrompt';
 
-import BrandLogo from './assets/images/logo-imporfrut.png';
+import BrandLogo from './assets/images/logo-teknergy.png';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -236,7 +236,7 @@ function AppContent() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
-          <img src={BrandLogo} alt="Logo ImporFrut" className="h-32 w-auto mb-lg object-contain" />
+          <img src={BrandLogo} alt="Logo Teknergy" className="h-20 w-auto max-w-full mb-lg object-contain" />
           <p className="text-text-secondary text-[10px] font-bold uppercase tracking-[0.2em]">
             Cargando Plataforma...
           </p>

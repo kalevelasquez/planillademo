@@ -32,7 +32,7 @@ export async function exportToExcel(
 
         // Título y metadatos (Filas 1-4)
         const headerSection = [
-            ['IMPORFRUT - SISTEMA DE GESTIÓN OPERATIVA'],
+            ['TEKNERGY - SISTEMA DE GESTIÓN OPERATIVA'],
             [`REPORTE: ${options?.title || fileName.replace(/_/g, ' ').toUpperCase()}`],
             [`Generado: ${timestamp}`, `Usuario: ${options?.author || 'Sistema'}`],
             [] // Espaciador

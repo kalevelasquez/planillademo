@@ -10,11 +10,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['logo-imporfrut.svg', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'ImporFrut - Gestión B2B',
-        short_name: 'ImporFrut',
-        description: 'Plataforma B2B para la gestión de inventario y pedidos de ImporFrut.',
+        name: 'Teknergy - Sistema de Planilla',
+        short_name: 'Teknergy',
+        description: 'Plataforma de gestión de planilla de Teknergy.',
         theme_color: '#122255',
         background_color: '#FFFFFF',
         display: 'standalone',

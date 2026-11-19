@@ -134,7 +134,7 @@ const MOTIVO_INDEMNIZACION_SIN_SECTOR =
     'PENDIENTE DE DEFINIR — no se ha configurado el sector económico de la empresa (Datos ' +
     'Fiscales) ni el salario mínimo diario vigente para ese sector, necesarios para calcular el ' +
     'tope de Indemnización (4× salario mínimo diario, Art. 58 CT). El salario base en sí ya está ' +
-    'confirmado por Imporfrut (sueldo mensual activo) — falta únicamente esta configuración.';
+    'confirmado por Teknergy (sueldo mensual activo) — falta únicamente esta configuración.';
 
 /**
  * CA1 — Indemnización (Art. 58 CT): `salario_diario_computable = MIN(sueldo_mensual/30, 4 ×

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 import { construirFilasIngresosConstanciaSalario, construirFilasDeduccionesConstanciaSalario, type ConstanciaSalarioDatos } from '../../../utils/constanciaSalarioUtils';
 
 const COLOR = { primary: '#10B981', secondary: '#1E293B', muted: '#64748B', light: '#F8FAFC', border: '#E2E8F0', white: '#FFFFFF' };
 
 const styles = StyleSheet.create({
     page: { padding: 56, paddingTop: 48, fontFamily: 'Helvetica', fontSize: 10, color: COLOR.secondary, backgroundColor: COLOR.white },
-    logo: { width: 110, marginBottom: 24 },
+    logo: { width: 150, marginBottom: 24 },
     titulo: { fontSize: 13, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
     destinatario: { fontSize: 11, fontWeight: 'bold', marginBottom: 16, textTransform: 'uppercase' },
     parrafo: { fontSize: 10, lineHeight: 1.5, marginBottom: 12, textAlign: 'justify' },

@@ -1,13 +1,13 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 import type { ConstanciaRetencionesDatos } from '../../../utils/constanciaRetencionesUtils';
 
 const COLOR = { primary: '#10B981', secondary: '#1E293B', muted: '#64748B', light: '#F8FAFC', border: '#E2E8F0', white: '#FFFFFF' };
 
 const styles = StyleSheet.create({
     page: { padding: 56, paddingTop: 48, fontFamily: 'Helvetica', fontSize: 10, color: COLOR.secondary, backgroundColor: COLOR.white },
-    logo: { width: 110, marginBottom: 24 },
+    logo: { width: 150, marginBottom: 24 },
     empresaLinea: { fontSize: 10, marginBottom: 2 },
     titulo: { fontSize: 13, fontWeight: 'bold', marginTop: 12, marginBottom: 12, textTransform: 'uppercase' },
     parrafo: { fontSize: 10, lineHeight: 1.5, marginBottom: 12, textAlign: 'justify' },

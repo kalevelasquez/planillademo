@@ -1,6 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import BrandLogo from '../../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../../assets/images/logo-teknergy.png';
 
 // Mismos tokens de color que OrderPDFTemplate.tsx — mantiene consistencia visual entre PDFs.
 const COLOR = {
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
         marginBottom: 20, borderBottomWidth: 1, borderBottomColor: COLOR.border, paddingBottom: 16,
     },
-    logo: { width: 90 },
+    logo: { width: 130 },
     headerRight: { alignItems: 'flex-end' },
     docLabel: { fontSize: 8, color: COLOR.muted, textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: 1 },
     titulo: { fontSize: 16, fontWeight: 'bold', color: COLOR.primary, marginTop: 2 },

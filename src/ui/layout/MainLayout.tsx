@@ -34,7 +34,7 @@ import ClipboardList from 'lucide-react/dist/esm/icons/clipboard-list';
 import ClipboardCheck from 'lucide-react/dist/esm/icons/clipboard-check';
 import ShieldCheck from 'lucide-react/dist/esm/icons/shield-check';
 import Bot from 'lucide-react/dist/esm/icons/bot';
-import BrandLogo from '../../assets/images/logo-imporfrut.png';
+import BrandLogo from '../../assets/images/logo-teknergy.png';
 import { useAuthStore } from '../../store/authStore';
 import { ROLES } from '../../config/constants';
 import { Navbar } from './Navbar';
@@ -224,7 +224,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {/* Sidebar (Desktop Only) */}
             <aside className="print:hidden hidden md:flex flex-col w-64 bg-white border-r border-border fixed inset-y-0 left-0 z-40">
                 <div className="h-16 px-xl border-b border-border flex items-center gap-sm shrink-0">
-                    <img src={BrandLogo} alt="Logo ImporFrut" className="h-10 w-auto object-contain shrink-0" />
+                    <img src={BrandLogo} alt="Logo Teknergy" className="h-10 w-auto object-contain shrink-0" />
                 </div>
 
                 <div className="flex-1 py-lg flex flex-col gap-xs overflow-y-auto">
@@ -368,7 +368,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                             ))}
                         </div>
                         <div className="p-lg border-t border-border mt-auto">
-                            <p className="text-[10px] text-text-secondary text-center uppercase tracking-wider font-semibold">ImporFrut v1.0</p>
+                            <p className="text-[10px] text-text-secondary text-center uppercase tracking-wider font-semibold">Teknergy v1.0</p>
                         </div>
                     </div>
                 </div>

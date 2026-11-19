@@ -72,7 +72,7 @@ export const DesignSystemView: React.FC = () => {
             <div className="mb-10">
                 <h1 className="text-3xl font-bold text-heading mb-2">Design System (UI Kit)</h1>
                 <p className="text-text-secondary">
-                    Galería de componentes base y tokens de diseño de <strong>ImporFrut v1.0</strong>.
+                    Galería de componentes base y tokens de diseño de <strong>Teknergy v1.0</strong>.
                 </p>
             </div>
 
@@ -278,7 +278,7 @@ export const DesignSystemView: React.FC = () => {
                             <InputField
                                 label="Email"
                                 type="email"
-                                placeholder="ejemplo@imporfrut.com"
+                                placeholder="ejemplo@teknergy.com"
                                 name="type_email"
                                 onChange={() => { }}
                             />
