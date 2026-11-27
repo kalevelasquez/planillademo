@@ -2414,5 +2414,40 @@
         "install_button": "Instalar App",
         "ios_msg": "En iOS, pulsa Compartir y luego 'Añadir a la pantalla de inicio'.",
         "not_now": "Más tarde"
+    },
+    "store": {
+        "nav": {
+            "catalog": "Catálogo",
+            "cart": "Carrito",
+            "account": "Mi cuenta",
+            "staffLogin": "Acceso personal"
+        },
+        "landing": {
+            "heroTitle": "Fruta fresca para tu negocio",
+            "heroSubtitle": "Consultá nuestro catálogo y la disponibilidad actual, directo desde tu celular.",
+            "cta": "Ver catálogo",
+            "contactTitle": "Contacto comercial"
+        },
+        "catalog": {
+            "search": "Buscar productos",
+            "empty": "No hay productos disponibles por el momento.",
+            "available": "Disponible",
+            "soldOut": "Agotado",
+            "addToCart": "Agregar al carrito",
+            "price": "Precio"
+        },
+        "errors": {
+            "store_unavailable": "La tienda no está disponible por el momento.",
+            "product_unavailable": "Este producto ya no está disponible.",
+            "generic": "Ocurrió un error inesperado. Intentá de nuevo."
+        }
+    },
+    "inventory": {
+        "image": {
+            "label": "Imagen del producto",
+            "invalidType": "Formato no permitido. Usá JPG, PNG o WebP.",
+            "tooLarge": "La imagen supera el máximo de 2 MB.",
+            "uploadError": "No se pudo subir la imagen. Intentá de nuevo."
+        }
     }
 }

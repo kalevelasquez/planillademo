@@ -2408,5 +2408,40 @@
         "ios_msg": "On iOS, tap Share and then 'Add to Home Screen'.",
         "not_now": "Not now",
         "pwa_ios_guide_dismiss": "Got it"
+    },
+    "store": {
+        "nav": {
+            "catalog": "Catalog",
+            "cart": "Cart",
+            "account": "My account",
+            "staffLogin": "Staff login"
+        },
+        "landing": {
+            "heroTitle": "Fresh fruit for your business",
+            "heroSubtitle": "Browse our catalog and current availability, straight from your phone.",
+            "cta": "View catalog",
+            "contactTitle": "Sales contact"
+        },
+        "catalog": {
+            "search": "Search products",
+            "empty": "No products are available right now.",
+            "available": "Available",
+            "soldOut": "Sold out",
+            "addToCart": "Add to cart",
+            "price": "Price"
+        },
+        "errors": {
+            "store_unavailable": "The store is not available right now.",
+            "product_unavailable": "This product is no longer available.",
+            "generic": "Something went wrong. Please try again."
+        }
+    },
+    "inventory": {
+        "image": {
+            "label": "Product image",
+            "invalidType": "Unsupported format. Use JPG, PNG or WebP.",
+            "tooLarge": "The image exceeds the 2 MB limit.",
+            "uploadError": "The image could not be uploaded. Please try again."
+        }
     }
 }
