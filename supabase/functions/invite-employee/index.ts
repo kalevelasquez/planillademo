@@ -6,6 +6,8 @@ const corsHeaders = {
 };
 
 import { Logger } from "../_shared/logger.ts";
+import { buildInvitePayload, canAssignRoles, isAdminOrSupervisor, normalizeRoles } from "../_shared/invitePayload.ts";
+import { inviteWithInvitation, type AdminLike } from "../_shared/userAdmin.ts";
 
 Deno.serve(async (req) => {
   const action = "invite-employee";
@@ -70,7 +72,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (callerProfile.role !== 'admin' && callerProfile.role !== 'supervisor') {
+    // `role` es text[]: comparar el array contra un string siempre daba "no autorizado".
+    if (!isAdminOrSupervisor(callerProfile.role)) {
       Logger.warn("Intento de invitación por usuario sin permisos de Admin", { action, callerId, role: callerProfile.role });
       return new Response(JSON.stringify({ error: 'Forbidden', message: 'No tienes el nivel suficiente (Admin) para invitar nuevos empleados' }), {
         status: 403,
@@ -79,13 +82,23 @@ Deno.serve(async (req) => {
     }
 
     const tenantId = callerProfile.tenant_id;
+    const roleName = normalizeRoles(role)[0] ?? '';
+
+    // Anti-escalación: solo un admin puede invitar con el rol admin
+    if (!canAssignRoles(callerProfile.role, [roleName])) {
+      Logger.warn("Intento de invitar con rol admin sin ser admin", { action, callerId, role: roleName });
+      return new Response(JSON.stringify({ error: 'Forbidden', message: 'Solo un administrador puede asignar el rol de Administrador.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // 2.1 Validar existencia del rol en el tenant
     const { data: roleExists, error: roleCheckError } = await supabaseAdmin
       .from('roles_definition')
       .select('id')
       .eq('tenant_id', tenantId)
-      .eq('name', role.toLowerCase().trim())
+      .eq('name', roleName)
       .single();
 
     if (roleCheckError || !roleExists) {
@@ -98,28 +111,32 @@ Deno.serve(async (req) => {
 
 
     // 4. Crear el usuario (Idempotencia con Delete-then-Invite)
-    let inviteData, inviteError;
-
-    const inviteRes = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        full_name,
-        role,
-        tenant_id: tenantId
-      }
+    //    Cada intento escribe una invitación NUEVA en staff_invitations (email + nonce) con service
+    //    role ANTES de invitar; el trigger handle_new_user crea el perfil con los datos de ESA
+    //    invitación (no de la metadata). roles y tenant salen del servidor, nunca del cliente.
+    const built = buildInvitePayload({
+      email,
+      fullName: full_name,
+      roles: [roleName],
+      tenantId,
+      createdBy: callerId,
     });
+    const admin = supabaseAdmin as unknown as AdminLike;
 
-    inviteData = inviteRes.data;
-    inviteError = inviteRes.error;
+    let inviteData: { user: { id: string } } | null = null;
 
-    if (inviteError) {
+    try {
+      const first = await inviteWithInvitation(admin, built);
+      inviteData = { user: first.user };
+    } catch (inviteError: any) {
       // Manejar el error HTTP 422: Usuario ya registrado
-      if (inviteError.status === 422 || inviteError.message.includes('already registered')) {
+      if (inviteError?.status === 422 || String(inviteError?.message ?? '').includes('already registered')) {
         Logger.info(`Usuario ya registrado found: ${email}. Analizando estado...`, { action, tenantId });
 
         const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
         if (listError) throw listError;
 
-        const existingUser = listData.users.find(u => u.email === email);
+        const existingUser = listData.users.find((u: { email?: string }) => u.email?.toLowerCase() === built.invitationRow.email);
 
         if (!existingUser) {
           throw inviteError;
@@ -139,16 +156,9 @@ Deno.serve(async (req) => {
             throw new Error("No se pudo regenerar la invitación, error al eliminar registro bloqueante.");
           }
 
-          const retryInvite = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            data: {
-              full_name,
-              role,
-              tenant_id: tenantId
-            }
-          });
-
-          if (retryInvite.error) throw retryInvite.error;
-          inviteData = retryInvite.data;
+          // Invitación NUEVA (nuevo nonce): la anterior fue limpiada al fallar el primer intento
+          const retry = await inviteWithInvitation(admin, built);
+          inviteData = { user: retry.user };
         }
       } else {
         throw inviteError;
@@ -161,18 +171,24 @@ Deno.serve(async (req) => {
 
     const newUserId = inviteData.user.id;
 
-    // 5. Actualizamos el teléfono (el trigger ya creó el perfil base en user_profiles)
-    if (phone) {
-      const { error: updateError } = await supabaseAdmin
-        .from('user_profiles')
-        .update({
-          phone: phone.replace('-', '')
-        })
-        .eq('id', newUserId);
+    // 5. Sincronización manual (blindaje, igual que manage-users): el trigger ya creó el perfil
+    //    base desde la invitación; el upsert con service role lo completa (teléfono) y cubre el
+    //    caso de que el trigger haya fallado (nunca bloquea el alta en auth.users).
+    const { error: upsertError } = await supabaseAdmin
+      .from('user_profiles')
+      .upsert({
+        id: newUserId,
+        email: built.invitationRow.email,
+        full_name: built.invitationRow.full_name ?? full_name,
+        role: built.invitationRow.roles,
+        tenant_id: tenantId,
+        phone: phone ? String(phone).replace('-', '') : null,
+        is_active: true,
+        status: 'PENDING'
+      });
 
-      if (updateError) {
-        throw updateError;
-      }
+    if (upsertError) {
+      throw upsertError;
     }
 
     Logger.info(`Invitación completada exitosamente: ${email}`, { action, tenantId, newUserId });

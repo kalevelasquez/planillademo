@@ -1,5 +1,7 @@
 /// <reference types="https://deno.land/x/supabase_functions/edge-runtime.d.ts" />
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { buildInvitePayload, canAssignRoles, normalizeRoles } from '../_shared/invitePayload.ts';
+import { inviteWithInvitation, revokeUserSessions, type AdminLike } from '../_shared/userAdmin.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -85,16 +87,15 @@ Deno.serve(async (req) => {
     // 3. Procesar Acción
     const { action, payload } = await req.json();
     const tenantId = profile.tenant_id;
-    const isAdmin = userRoles.includes('admin');
 
     console.log(`Ejecutando acción: ${action} para tenant: ${tenantId}`);
 
     // --- VALIDACIÓN DE ANTI-ESCALACIÓN Y AUTO-PROTECCIÓN ---
     if (action === 'CREATE_USER' || action === 'UPDATE_USER') {
-      const targetRoles = Array.isArray(payload.roles) ? payload.roles : [];
+      const targetRoles = normalizeRoles(payload.roles);
 
       // Solo un Admin puede asignar el rol de 'admin'
-      if (targetRoles.includes('admin') && !isAdmin) {
+      if (!canAssignRoles(userRoles, targetRoles)) {
         return new Response(JSON.stringify({ error: 'No tenés permisos para asignar el rol de Administrador.' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -104,7 +105,7 @@ Deno.serve(async (req) => {
       // Prohibir que un usuario se cambie sus propios roles (Auto-escalación / Auto-protección)
       if (action === 'UPDATE_USER' && payload.id === caller.id) {
         // Obtenemos los roles actuales del usuario en la BD para comparar si intenta cambiarlos
-        if (JSON.stringify(targetRoles.sort()) !== JSON.stringify(userRoles.sort())) {
+        if (JSON.stringify([...targetRoles].sort()) !== JSON.stringify([...userRoles].sort())) {
           return new Response(JSON.stringify({ error: 'No podés modificar tus propios roles.' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,22 +115,36 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'CREATE_USER') {
-      const { email, full_name, roles, phone } = payload;
+      const { full_name, phone } = payload;
 
-      // 1. Invitar al usuario (Corrección de estructura de API v2)
-      const { data: userData, error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(email, {
-        data: {
-          full_name,
-          needs_password_change: true,
-          tenant_id: tenantId,
-          roles: roles
-        },
-        redirectTo: `${Deno.env.get('PUBLIC_SITE_URL') ?? 'http://localhost:5173'}/login`
-      });
+      // 1. Armar la invitación (valida email/roles/tenant) — roles y tenant salen del SERVIDOR
+      //    (perfil del solicitante), nunca de la metadata del usuario invitado.
+      let built;
+      try {
+        built = buildInvitePayload({
+          email: payload.email,
+          fullName: full_name,
+          roles: payload.roles,
+          tenantId,
+          createdBy: caller.id,
+          redirectTo: `${Deno.env.get('PUBLIC_SITE_URL') ?? 'http://localhost:5173'}/login`,
+        });
+      } catch (validationError: any) {
+        return new Response(JSON.stringify({ error: `Datos de invitación inválidos: ${validationError.message}` }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-      if (inviteError) throw inviteError;
+      // 2. staff_invitations (email + nonce) con service role ANTES de invitar, luego
+      //    inviteUserByEmail con el nonce y app_metadata {tenant_id, roles}. Si la invitación
+      //    falla, la fila se limpia y el error se propaga.
+      const { user: invitedUser } = await inviteWithInvitation(supabaseClient as unknown as AdminLike, built);
+      const userData = { user: invitedUser };
+      const email = built.invitationRow.email;
+      const roles = built.invitationRow.roles;
 
-      // 2. Sincronización Manual (Blindaje): Usamos .upsert() por si el trigger falló
+      // 3. Sincronización Manual (Blindaje): Usamos .upsert() por si el trigger falló
       const { error: syncError } = await supabaseClient
         .from('user_profiles')
         .upsert({
@@ -180,13 +195,18 @@ Deno.serve(async (req) => {
 
       if (authUpdateError) throw authUpdateError;
 
-      // SI SE DESACTIVA: Forzar cierre de sesión global para invalidar JWTs actuales
+      // SI SE DESACTIVA: invalidar TODAS las sesiones (refresh tokens) del usuario.
+      // OJO: auth.admin.signOut(jwt, scope) de supabase-js recibe un JWT, NO un user id; la
+      // llamada anterior `signOut(id, 'global')` nunca podia funcionar. Se usa el RPC
+      // revoke_user_sessions (migración 0c, solo service_role). El baneo de arriba ya impide
+      // renovar el token; esto además corta las sesiones existentes. Un access token ya emitido
+      // sigue siendo válido hasta su expiración (≤ 1 h): el kill-switch del front cubre ese tramo.
       if (!is_active) {
-        const { error: signOutError } = await supabaseClient.auth.admin.signOut(id, 'global');
-        if (signOutError) {
-          console.error(`[WARN] No se pudo cerrar la sesión global del usuario ${id}:`, signOutError.message);
+        const revoked = await revokeUserSessions(supabaseClient as unknown as AdminLike, id);
+        if (!revoked.ok) {
+          console.error(`[WARN] No se pudieron revocar las sesiones del usuario ${id}:`, revoked.error);
         } else {
-          console.log(`[AUTH] Sesión global cerrada exitosamente para usuario: ${id}`);
+          console.log(`[AUTH] Sesiones revocadas (${revoked.revoked}) para usuario: ${id}`);
         }
       }
 
@@ -196,13 +216,15 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'UPDATE_USER') {
-      const { id, full_name, roles, phone } = payload;
+      const { id, full_name, phone } = payload;
+      const roles = normalizeRoles(payload.roles);
 
+      // user_profiles es la fuente de verdad; el trigger sync_user_claims publica role/tenant en app_metadata
       const { error: dbUpdateError } = await supabaseClient
         .from('user_profiles')
         .update({
           full_name,
-          role: roles,
+          role: payload.roles === undefined ? undefined : roles,
           phone
         })
         .eq('id', id)
@@ -210,9 +232,17 @@ Deno.serve(async (req) => {
 
       if (dbUpdateError) throw dbUpdateError;
 
-      await supabaseClient.auth.admin.updateUserById(id, {
-        user_metadata: { roles, full_name }
-      });
+      // app_metadata (lo que lee el JWT) además del trigger. NUNCA roles en user_metadata:
+      // esa metadata la puede reescribir el propio usuario.
+      const authUpdate: Record<string, unknown> = {};
+      if (roles.length > 0) authUpdate.app_metadata = { tenant_id: tenantId, roles };
+      if (full_name) authUpdate.user_metadata = { full_name };
+      if (Object.keys(authUpdate).length > 0) {
+        const { error: authMetaError } = await supabaseClient.auth.admin.updateUserById(id, authUpdate);
+        if (authMetaError) {
+          console.error(`[WARN] No se pudo actualizar la metadata de auth del usuario ${id}:`, authMetaError.message);
+        }
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
