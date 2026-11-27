@@ -1,0 +1,47 @@
+-- =============================================================================
+-- F1 / B1.1 - Escenarios de referencia: catalogo publico e imagenes (tienda-web-clientes)
+--
+-- DOCUMENTO DE REFERENCIA. Las assertions EJECUTABLES viven dentro de las migraciones
+-- (bloques DO autoverificables con fixtures que se deshacen y RAISE EXCEPTION => rollback):
+--   * supabase/migrations/20261128090000_imagenes_productos.sql   (bloques A y B: I1..I7)
+--   * supabase/migrations/20261128100000_rpcs_catalogo_tienda.sql  (bloques A y B: C1..C12)
+-- Este archivo mapea cada escenario del spec a su assertion (el equipo no usa el SQL editor).
+--
+-- Verificacion previa al merge (reproducible, descartable): Postgres 16 en podman con stubs de
+-- auth/storage + migraciones 0a, B1.2 y B1.3. RED = migracion sin la implementacion (las
+-- assertions fallan); GREEN = migracion completa; mutaciones = cada assertion detecta su mutante.
+-- =============================================================================
+
+-- ---------- spec store-public-catalog (SPC) -------------------------------------------------
+-- Tenant habilitado ........................ C1 (3 tarjetas), C12a (authenticated tambien)
+-- Tenant no habilitado / inexistente ....... C6a (tienda deshabilitada), C6b (inexistente), C6c (NULL), C12b
+-- Payload minimo ........................... C5 (llaves exactas), C5b (sin stock 37.5, marca, lote, id, tenant)
+--                                            C5c (payload no vacio: la prueba de fuga es significativa)
+-- Solo Disponible/Agotado .................. C2, C3, C4
+-- Acceso directo a tablas .................. C10a (anon: SELECT directo sobre products = 0 filas / sin privilegio)
+--                                            C11  (store_catalog_groups no ejecutable por anon)
+-- Agrupacion ............................... C1/C2 (3 lotes, uno con distinto case => 1 tarjeta, precio del lote antiguo)
+-- Agotado .................................. C3 (stock 0, precio del lote mas reciente)
+-- Producto inactivo ........................ C1 (ZZ Uva no aparece)
+-- Detalle inexistente ...................... C7b (key inexistente), C7c (key de otro tenant), C7d (tienda deshabilitada), C7e (NULL)
+-- Detalle existente ........................ C7a, C7a2 (key en mayusculas)
+-- Busqueda segura .......................... C8a..C8f (coincidencia, vacio, comodines % y _ escapados, blanco)
+-- Limites .................................. C9a..C9g (limit 1..100, offset >= 0, NULL => defaults)
+-- Catalogo (A) ............................. RETURNS exacto, SECURITY DEFINER, STABLE, search_path fijo,
+--                                            EXECUTE anon+authenticated, PUBLIC sin EXECUTE, funcion interna cerrada
+
+-- ---------- spec product-images (PI) ---------------------------------------------------------
+-- Columna y bucket ......................... A: products.image_url text NULL; bucket public, 2 MB, jpeg/png/webp
+-- Lectura publica .......................... bucket public=true (la URL publica no pasa por RLS); sin policy SELECT para anon
+-- Escritura no autorizada (anon) ........... I1, I1b
+-- Escritura no autorizada (cliente) ........ I2 (authenticated sin claims y con user_metadata hostil)
+-- Sin permiso de inventario ................ I3
+-- Escritura propia ......................... I4 (editor del tenant A en {A}/...)
+-- Escritura cross-tenant ................... I5 (insert en {B}/...), I6a/b/c (no ve/actualiza/borra objetos de B)
+-- Triangulacion ............................ I7 (el editor SI borra su propio objeto)
+
+-- ---------- Pendiente de verificar en vivo (no se puede en la migracion) -----------------------
+-- * Limite de 2 MB y tipos MIME los aplica el servicio de Storage (no RLS): se comprueba subiendo un archivo
+--   de 3 MB y un .gif desde Inventario (B3) tras el merge.
+-- * En el Supabase real, un error de infraestructura de storage al insertar fixtures (triggers de prefijos,
+--   privilegios) deja I4/I7 en NOTICE (no falla la migracion); los caminos NEGATIVOS siempre se verifican.

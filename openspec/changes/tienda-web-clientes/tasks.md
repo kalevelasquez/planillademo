@@ -13,6 +13,9 @@
 - **PWA**: `chunkFileNames` con prefijo `admin-` (no `manualChunks`).
 - **Dependencia dura**: NO habilitar signup de tienda (F2: `store_enabled=true`, "Confirm email", deploy del front de cuenta) hasta aplicar la migracion 0d. (Actualizado 2026-11-27: 0d ya no es una espera de seguridad de >=1 h; el fallback es a `user_profiles`, nunca a `user_metadata`. 0d es limpieza y gate.)
 - **Fallback B (2026-11-27)**: `get_auth_tenant_id/roles` leen `app_metadata` y, si esta vacio, `user_profiles` por `auth.uid()` (DEFINER, `search_path` fijo). 0a incluye el guard BEFORE UPDATE de `user_profiles` (H3).
+- **Cambio de orden (2026-11-27, aprobado)**: F1 (batches B) se despliega ANTES de terminar F0 (0b/0c/0d). F2 (signup) sigue bloqueado hasta F0 completo (0d). Los commits de B1 se llevan a `main` por cherry-pick SIN 0b.
+- **Orden de migraciones (gotcha)**: 0b (`20261127100000`) y 0c (`20261127110000`) tienen timestamp ANTERIOR a las migraciones B1 (`20261128090000`, `20261128100000`) que se aplican antes. Supabase rechaza migraciones fuera de orden. **Antes de mergear 0b (y 0c) a `main`, renombrarlas (y sus `.down.sql`) con un timestamp posterior a la ultima migracion aplicada** (ver A2.0). No renombrar ahora.
+- **Independencia de B1 respecto de 0b**: B1.3 crea `tenants.store_enabled` + `uq_tenants_single_store_enabled` con `IF NOT EXISTS` y la misma definicion que 0b; 0b es un no-op sobre esas piezas (verificado en ambos ordenes, con y sin tienda habilitada).
 - **Acoplamiento 0b/edge functions**: tras 0b, `invite-employee` deja de crear el perfil (lo hacia el trigger con metadata) hasta A2.4. Mergear 0b junto con A2.4 o asumir la ruptura de esa funcion en la demo. `manage-users` no se afecta (hace upsert propio).
 
 ## F0 - Claims y signup seguros
@@ -28,7 +31,8 @@
 - [x] A1.2 `supabase/migrations/20261127100000_handle_new_user_ramificado.sql` (store_enabled + indice unico parcial, customers.auth_user_id/email, handle_new_user con EXCEPTION, autoverificacion de las ramas invitacion/tienda/hostil/fallo) + `supabase/rollback/20261127100000_handle_new_user_ramificado.down.sql`. CHECK de `customers.price_type` verificado: el insert usa el default 'cliente'.
 - [ ] A1.3 [MANUAL] Merge a `main` (el push aplica 0a y 0b solas; si una autoverificacion falla no se aplica nada). Smoke check: entrar como admin y ver el menu completo. Ver el acoplamiento 0b/`invite-employee` arriba: considerar mergear solo 0a ahora y 0b con A2.4.
 
-### Batch A2 - Blindaje RPC 0c + edge functions + front auth (6 tareas)
+### Batch A2 - Blindaje RPC 0c + edge functions + front auth (7 tareas)
+- [ ] A2.0 [PRE-MERGE de 0b/0c] Renombrar `20261127100000_handle_new_user_ramificado.sql` y `20261127110000_blindar_rpcs_definer.sql` (y sus `.down.sql`) con un timestamp posterior a la ultima migracion aplicada en `main` (hoy `20261128100000`, mas lo que se haya sumado). Actualizar las referencias de rollback en sus comentarios. Sin esto el deploy rechaza la migracion por estar fuera de orden.
 - [ ] A2.1 RED: escribir las assertions (dentro de 0c, bloque DO de autoverificacion) para `assert_internal_user`, `create_direct_order_atomic` con tenant ajeno, `confirm_order_atomic` cross-tenant, `fn_crear_notificacion` no ejecutable por authenticated; documentar los escenarios en `f0_claims.test.sql`.
 - [ ] A2.2 `supabase/migrations/20261127110000_blindar_rpcs_definer.sql` + `.down.sql` autoverificables + las funciones de la tabla de auditoria estatica en `design.md` (reportes BI, dashboard/sales_trend, sync_inventory_catalog, fn_notificar_*, seed_default_permissions, log_tech_error, increment_error_metrics, next_order_number).
 - [ ] A2.3 RED->GREEN vitest `src/services/authService.test.ts`: `getBootstrapData` devuelve `null` si `data.error`; modificar `src/services/authService.ts`.
@@ -37,16 +41,16 @@
 - [ ] A2.6 [MANUAL] Merge a `main` (aplica 0c); deploy de edge functions (`supabase functions deploy manage-users invite-employee`); probar invitar empleado real; cerrar sesion y volver a entrar con cada usuario interno (refresca JWT y toma `app_metadata`).
 
 ### Batch A3 - Migracion 0d (2 tareas) - GATE de F2
-- [ ] A3.1 `supabase/migrations/20261128090000_retirar_fallback_user_profiles.sql` + `.down.sql` (renombrada: el fallback ya es a `user_profiles`, no a `user_metadata`) autoverificables: con el fallback retirado, un JWT sin claims no da tenant y todos los usuarios internos tienen `app_metadata`.
+- [ ] A3.1 `supabase/migrations/<timestamp posterior a la ultima aplicada>_retirar_fallback_user_profiles.sql` (el `20261128090000` ya lo usa B1.2) + `.down.sql` (renombrada: el fallback ya es a `user_profiles`, no a `user_metadata`) autoverificables: con el fallback retirado, un JWT sin claims no da tenant y todos los usuarios internos tienen `app_metadata`.
 - [ ] A3.2 [MANUAL] Merge a `main` (aplica 0d; ya no hay espera de >=1 h por seguridad, la propia migracion verifica que todos los internos tienen `app_metadata`). Smoke check admin. **No avanzar a F2 sin esto.**
 
 ## F1 - Catalogo publico, imagenes, shell publico y PWA
 
 ### Batch B1 - Imagenes y RPCs de catalogo SQL (4 tareas)
-- [ ] B1.1 RED `supabase/tests/sql/f1_catalog.test.sql`: payload sin cost/stock/lote/proveedor, agrupacion, Agotado, inactivo, tienda deshabilitada/inexistente, anon SELECT directo = 0, `store_get_product` inexistente, storage escritura anon/cliente/cross-tenant rechazada. (SPC todos, PI Lectura/Escritura)
-- [ ] B1.2 `supabase/migrations/20261201090000_imagenes_productos.sql` (+down): `products.image_url`, bucket `product_images`, policies de storage.
-- [ ] B1.3 `supabase/migrations/20261201100000_rpcs_catalogo_tienda.sql` (+down): `store_list_products`, `store_get_product` (DEFINER, search_path, REVOKE/GRANT a anon+authenticated, limit 1..100).
-- [ ] B1.4 [MANUAL] Merge a `main` (aplica ambas; autoverificacion con `f1_catalog.test.sql` como referencia). Smoke check admin.
+- [x] B1.1 RED `supabase/tests/sql/f1_catalog.test.sql` (referencia: mapea cada escenario SPC/PI a su assertion C1..C12 / I1..I7 dentro de las migraciones): payload sin cost/stock/lote/proveedor, agrupacion, Agotado, inactivo, tienda deshabilitada/inexistente, anon SELECT directo = 0, `store_get_product` inexistente, storage escritura anon/cliente/cross-tenant rechazada. (SPC todos, PI Lectura/Escritura)
+- [x] B1.2 `supabase/migrations/20261128090000_imagenes_productos.sql` + `supabase/rollback/20261128090000_imagenes_productos.down.sql` (timestamp movido de 20261201 a 20261128 por el cambio de orden): `products.image_url`, bucket `product_images` (public, 2 MB, jpeg/png/webp), policies de storage (INSERT create|edit, UPDATE/DELETE edit, SELECT solo authenticated del tenant; anon sin policies). Autoverificable (catalogo + fixtures I1..I7).
+- [x] B1.3 `supabase/migrations/20261128100000_rpcs_catalogo_tienda.sql` + `supabase/rollback/20261128100000_rpcs_catalogo_tienda.down.sql`: `store_catalog_groups` (interna, sin EXECUTE a anon/authenticated), `store_list_products`, `store_get_product` (DEFINER, search_path, REVOKE PUBLIC/GRANT a anon+authenticated, limit 1..100). Crea `tenants.store_enabled` + indice unico parcial idempotentes (independiente de 0b). Autoverificable (catalogo + fixtures C1..C12).
+- [ ] B1.4 [MANUAL] Merge a `main` por cherry-pick de los commits de B1 SIN 0b (el push aplica ambas; si una autoverificacion falla no se aplica nada). Smoke check admin (menu completo, inventario y productos cargan) + subir una imagen cuando exista B3. NOTA: el `UPDATE tenants SET store_enabled=true` NO va en B1 (va en B4.6, ver abajo).
 
 ### Batch B2 - Config, PWA y routing base (7 tareas)
 - [ ] B2.1 RED->GREEN `src/config/storePaths.ts` + test (`isStorePath`, constantes de rutas).
@@ -68,7 +72,7 @@
 - [ ] B4.3 Hooks `useCatalog`, `useProduct` + containers `LandingPage`, `CatalogPage`, `ProductDetailPage`.
 - [ ] B4.4 `PublicApp.tsx` (shell: header + Outlet + footer, sin bootstrap admin) y cableado de rutas `/`, `/tienda`, `/tienda/p/:productKey`.
 - [ ] B4.5 `e2e/store.spec.ts`: landing anon, catalogo, anon en `/inicio` -> `/login`.
-- [ ] B4.6 [MANUAL] Setear en Vercel `VITE_STORE_TENANT_ID` (y `VITE_STORE_CAPTCHA_ENABLED=false`); `UPDATE tenants SET store_enabled=true` SOLO del tenant (puede hacerse en F1 porque el signup aun no existe, pero el front de cuenta no se despliega); desplegar; probar `/`, `/tienda`, PWA instalada arranca en `/inicio`; limpiar SW antiguo.
+- [ ] B4.6 [MANUAL] Setear en Vercel `VITE_STORE_TENANT_ID` (y `VITE_STORE_CAPTCHA_ENABLED=false`); habilitar la tienda del tenant demo VIA MIGRACION (no SQL editor): `supabase/migrations/<ts>_habilitar_tienda_demo.sql` autoverificable que hace `UPDATE tenants SET store_enabled=true` SOLO si existe exactamente UN tenant activo (si no, `RAISE NOTICE` y no-op) y asserta el resultado (hasta F2 no hay signup, pero ojo: si 0b ya esta aplicada, `store_enabled=true` activa la rama tienda de `handle_new_user`; por eso no habilitar antes de A3); desplegar; probar `/`, `/tienda`, PWA instalada arranca en `/inicio`; limpiar SW antiguo.
 
 > Nota: el signup de tienda queda deshabilitado en F1 (sin paginas de registro) y el trigger 0b ya esta activo; 0d debe estar aplicado antes de F2.
 
