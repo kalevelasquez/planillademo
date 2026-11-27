@@ -53,13 +53,15 @@
 - [ ] B1.4 [MANUAL] Merge a `main` por cherry-pick de los commits de B1 SIN 0b (el push aplica ambas; si una autoverificacion falla no se aplica nada). Smoke check admin (menu completo, inventario y productos cargan) + subir una imagen cuando exista B3. NOTA: el `UPDATE tenants SET store_enabled=true` NO va en B1 (va en B4.6, ver abajo).
 
 ### Batch B2 - Config, PWA y routing base (7 tareas)
-- [ ] B2.1 RED->GREEN `src/config/storePaths.ts` + test (`isStorePath`, constantes de rutas).
-- [ ] B2.2 RED->GREEN `pwa.config.ts` + test (`isAdminModule`, `globIgnores`, `start_url:'/inicio'`, `devOptions.enabled=false`); modificar `vite.config.ts` con `chunkFileNames` (prefijo `admin-`). (PSR PWA)
-- [ ] B2.3 Modificar `src/config/brand.ts`: `CONTACT {SALES_EMAIL:'ventas@teknergy.com', SALES_PHONE:'50300000000'}` marcados PLACEHOLDER, unico lugar de contacto. Test: la landing no usa `SUPPORT_EMAIL`/`PHONE_BODEGA`. (PSR Contacto)
-- [ ] B2.4 Crear `src/config/env.ts` (`VITE_STORE_TENANT_ID`, `VITE_STORE_CAPTCHA_ENABLED=false`) y `src/config/storeSupabaseClient.ts` (storageKey `sb-teknergy-store`, pkce, detectSessionInUrl solo `/cuenta*`); modificar `src/config/supabaseClient.ts` (`detectSessionInUrl: !isStorePath(...)`). Test: storageKeys distintos. (PSR Aislamiento)
-- [ ] B2.5 RED->GREEN: mover `AppContent` a `src/AdminApp.tsx` (+ `/inicio`, fallbacks y `Navigate` a `/inicio`, `LoginView` respeta `location.state.from`, `refreshSession` al cambiar rol); modificar `MainLayout.tsx`, `ProtectedRoute.tsx`, `e2e/auth.spec.ts` (`/inicio`). (PSR Dashboard movido, Admin sin sesion, Cliente en ruta admin)
-- [ ] B2.6 RED->GREEN: `src/App.tsx` router delgado (PublicApp/AdminApp lazy, ReloadPrompt global). Test RTL: `/` no llama `getBootstrapData`; `/inventario` monta AdminApp. (PSR Landing, Sin bootstrap admin, Rutas admin intactas)
-- [ ] B2.7 Modificar `index.html` (`lang="es"`, titulo/descripcion landing) y `public/locales/{es,en}/common.json` (claves `store.*` para esta fase, `inventory.image.*`).
+- [x] B2.1 RED->GREEN `src/config/storePaths.ts` + test (`isStorePath`, constantes de rutas).
+- [x] B2.2 RED->GREEN `pwa.config.ts` + test (`isAdminModule`, `globIgnores`, `start_url:'/inicio'`, `devOptions.enabled=false`); modificar `vite.config.ts` con `chunkFileNames` (prefijo `admin-`). (PSR PWA)
+- [x] B2.3 Modificar `src/config/brand.ts`: `CONTACT {SALES_EMAIL:'ventas@teknergy.com', SALES_PHONE:'50300000000'}` marcados PLACEHOLDER, unico lugar de contacto. Test: la landing no usa `SUPPORT_EMAIL`/`PHONE_BODEGA`. (PSR Contacto)
+- [x] B2.4 Crear `src/config/env.ts` (`VITE_STORE_TENANT_ID`, `VITE_STORE_CAPTCHA_ENABLED=false`) y `src/config/storeSupabaseClient.ts` (storageKey `sb-teknergy-store`, pkce, detectSessionInUrl solo `/cuenta*`); modificar `src/config/supabaseClient.ts` (`detectSessionInUrl: !isStorePath(...)`). Test: storageKeys distintos. (PSR Aislamiento)
+- [x] B2.5 RED->GREEN: mover `AppContent` a `src/AdminApp.tsx` (+ `/inicio`, fallbacks y `Navigate` a `/inicio`, `LoginView` respeta `location.state.from`, `refreshSession` al cambiar rol); modificar `MainLayout.tsx`, `ProtectedRoute.tsx`, `e2e/auth.spec.ts` (`/inicio`). (PSR Dashboard movido, Admin sin sesion, Cliente en ruta admin)
+- [x] B2.6 RED->GREEN: `src/App.tsx` router delgado (PublicApp/AdminApp lazy, ReloadPrompt global). Test RTL: `/` no llama `getBootstrapData`; `/inventario` monta AdminApp. (PSR Landing, Sin bootstrap admin, Rutas admin intactas)
+- [x] B2.7 Modificar `index.html` (`lang="es"`, titulo/descripcion landing) y `public/locales/{es,en}/common.json` (claves `store.*` para esta fase, `inventory.image.*`).
+
+> Nota B2 (implementado): `PublicApp` aun no existe, asi que `App.tsx` usa un gate interino `RootGate` en `/` (sesion -> `/inicio`, sin sesion -> `/login`, conserva search/hash; sin bootstrap admin). B4.4 lo reemplaza por la landing. `isStorePath` cubre solo `/tienda*` y `/cuenta*` ("/" excluido a proposito: el Site URL de Supabase puede traer tokens admin). `lazyWithRetry` se extrajo a `src/utils/lazyWithRetry.ts`. `src/test/setup.ts` suma un shim de `localStorage` (Node >= 25 lo rompe en jsdom).
 
 ### Batch B3 - Imagen en inventario (3 tareas)
 - [ ] B3.1 RED->GREEN `uploadProductImage(file)` en `storageService.ts` + `productService.ts` (valida tipo jpg/png/webp y 2 MB, ruta `{tenant}/{product}-{ts}.webp`, guarda `image_url`). Test vitest con supabase mockeado. (PI Subir valida, Archivo invalido)
