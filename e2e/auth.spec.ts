@@ -8,7 +8,7 @@ import { loginAs } from './fixtures/auth';
 test.describe('Login por rol', () => {
     test('el Admin puede loguearse y llega al dashboard', async ({ page }) => {
         await loginAs(page, 'admin');
-        await expect(page).toHaveURL(/\/$/);
+        await expect(page).toHaveURL(/\/inicio$/);
     });
 
     test('el Aprobador puede loguearse y llega a la Revisión de Quincena', async ({ page }) => {

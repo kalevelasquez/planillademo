@@ -37,6 +37,7 @@ import Bot from 'lucide-react/dist/esm/icons/bot';
 import BrandLogo from '../../assets/images/logo-teknergy.png';
 import { useAuthStore } from '../../store/authStore';
 import { ROLES } from '../../config/constants';
+import { ROUTES } from '../../config/storePaths';
 import { Navbar } from './Navbar';
 import { permissionService, type Permission } from '../../services/permissionService';
 
@@ -98,7 +99,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // (antes la página del padre) pasa a ser su primer hijo, "Pedidos".
     const navItems = useMemo(() => {
         const items: NavEntry[] = [
-            { icon: <LayoutDashboard size={24} />, label: 'Inicio', path: '/' },
+            { icon: <LayoutDashboard size={24} />, label: 'Inicio', path: ROUTES.ADMIN_HOME },
         ];
 
         const canView = (resource: string) => myPermissions.find(p => p.resource === resource)?.can_view;
@@ -193,7 +194,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // exclusivamente "Pedidos") — en ese caso desaparece del drawer secundario, porque ya es
     // 100% accesible desde abajo. "Planilla" (ningún hijo en mainPaths) queda entero en el
     // drawer, como grupo colapsable igual que en el sidebar de escritorio.
-    const mainPaths = ['/', '/pedidos', '/clientes', '/inventario', '/despacho'];
+    const mainPaths = [ROUTES.ADMIN_HOME, '/pedidos', '/clientes', '/inventario', '/despacho'];
     const flattenLeaves = (entries: NavEntry[]): NavLeaf[] =>
         entries.flatMap(entry => (isGroup(entry) ? entry.children : [entry]));
 

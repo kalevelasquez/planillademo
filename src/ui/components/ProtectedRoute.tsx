@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { ROUTES } from '../../config/storePaths';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -39,7 +40,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
         const hasPermission = roles.some(role => userRoles.includes(role.toLowerCase()));
 
         if (!hasPermission) {
-            return <Navigate to="/" replace />;
+            return <Navigate to={ROUTES.ADMIN_HOME} replace />;
         }
     }
 
