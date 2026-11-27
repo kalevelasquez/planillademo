@@ -158,6 +158,13 @@ export const authService = {
                 return this.getCurrentSession();
             }
 
+            // Sin perfil interno (p. ej. un cliente de la tienda web: usuario de auth sin user_profiles)
+            // el RPC responde { error: 'Profile not found' }. Es un resultado esperado, no una falla:
+            // se devuelve null de forma explicita (antes pasaba por un TypeError accidental + fallback).
+            if (!data || data.error || !data.profile) {
+                return null;
+            }
+
             const profileRaw = data.profile;
             const rawRoles = profileRaw.roles || profileRaw.role || [];
             const roleArray = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
