@@ -2447,7 +2447,12 @@
             "label": "Imagen del producto",
             "invalidType": "Formato no permitido. Usá JPG, PNG o WebP.",
             "tooLarge": "La imagen supera el máximo de 2 MB.",
-            "uploadError": "No se pudo subir la imagen. Intentá de nuevo."
+            "uploadError": "No se pudo subir la imagen. Intentá de nuevo.",
+            "hint": "JPG, PNG o WebP. Máximo 2 MB. Se aplica a todos los lotes del mismo producto, calibre y calidad.",
+            "remove": "Quitar imagen",
+            "updated": "Imagen del producto actualizada.",
+            "removed": "Imagen del producto eliminada.",
+            "uploadAfterCreate": "El producto se creó, pero no se pudo subir la imagen. Podés agregarla desde el inventario."
         }
     }
 }

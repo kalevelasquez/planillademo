@@ -2441,7 +2441,12 @@
             "label": "Product image",
             "invalidType": "Unsupported format. Use JPG, PNG or WebP.",
             "tooLarge": "The image exceeds the 2 MB limit.",
-            "uploadError": "The image could not be uploaded. Please try again."
+            "uploadError": "The image could not be uploaded. Please try again.",
+            "hint": "JPG, PNG or WebP. Max 2 MB. Applies to every lot of the same product, caliber and quality.",
+            "remove": "Remove image",
+            "updated": "Product image updated.",
+            "removed": "Product image removed.",
+            "uploadAfterCreate": "The product was created, but the image could not be uploaded. You can add it from the inventory."
         }
     }
 }
