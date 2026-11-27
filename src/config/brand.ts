@@ -36,3 +36,24 @@ export const BRAND = {
     /** Emoji identificador para encabezados de mensajes WhatsApp */
     WA_HEADER_EMOJI: '🍎',
 } as const;
+
+/**
+ * Contacto COMERCIAL publico (landing y tienda). Es el UNICO lugar de contacto que debe usar el
+ * shell publico: `SUPPORT_EMAIL` y `PHONE_BODEGA` de BRAND son de uso interno (PDF / WhatsApp
+ * a bodega) y NO se exponen al visitante.
+ *
+ * ⚠️ PLACEHOLDER: los valores son provisionales. Reemplazar por los datos comerciales reales
+ * antes de dar publicidad a la tienda (telefono/whatsapp en formato 503XXXXXXXX, sin '+').
+ */
+export const CONTACT = {
+    /** PLACEHOLDER — email comercial provisional. */
+    SALES_EMAIL: 'ventas@teknergy.com',
+    /** PLACEHOLDER — telefono comercial (formato DB 503XXXXXXXX). */
+    SALES_PHONE: '50300000000',
+    /** PLACEHOLDER — whatsapp comercial (formato DB 503XXXXXXXX). */
+    SALES_WHATSAPP: '50300000000',
+    /** PLACEHOLDER — direccion comercial. */
+    ADDRESS: 'Direccion por definir, San Salvador, El Salvador',
+    /** `true` mientras los valores de arriba sean provisionales. */
+    IS_PLACEHOLDER: true,
+} as const;

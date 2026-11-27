@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { isStorePath } from './storePaths'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -12,7 +13,9 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true,
+        // H5: en /tienda* y /cuenta* este cliente NO debe tocar la URL (capturaria el token de
+        // confirmacion de la tienda). En el resto de rutas (incluida "/") sigue activo.
+        detectSessionInUrl: !(typeof window !== 'undefined' && isStorePath(window.location.pathname)),
     }
 })
 
