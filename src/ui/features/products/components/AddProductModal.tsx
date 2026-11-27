@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { X, PackagePlus, AlertTriangle, CheckCircle2, Plus } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, PackagePlus, AlertTriangle, CheckCircle2, Plus, ImagePlus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/Button';
 import { InputField } from '../../../components/InputField';
 import { useAuthStore } from '../../../../store/authStore';
+import { validateProductImage } from '../../../../services/storageService';
 
 interface AddProductForm {
     name: string;
@@ -57,7 +59,16 @@ const EMPTY_FORM: AddProductForm = {
 };
 
 export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuccess }) => {
-    const { profile } = useAuthStore();
+    const { t } = useTranslation();
+    const { profile, permissions } = useAuthStore();
+    // Solo quien puede EDITAR inventario ve el control de imagen (las policies de storage/products
+    // exigen inventario.edit para el UPDATE que aplica la imagen al grupo de lotes).
+    const canUploadImage = permissions.find(p => p.resource === 'inventario')?.can_edit ?? false;
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageError, setImageError] = useState<string | null>(null);
+    const [imageWarning, setImageWarning] = useState<string | null>(null);
     const [form, setForm] = useState<AddProductForm>(EMPTY_FORM);
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,6 +76,29 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuc
     const [successData, setSuccessData] = useState<CreatedProductSummary | null>(null);
 
     const upper = (s: string) => s.trim().toUpperCase();
+
+    useEffect(() => () => { if (imagePreview) URL.revokeObjectURL(imagePreview); }, [imagePreview]);
+
+    const clearImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setImageError(null);
+        if (imageInputRef.current) imageInputRef.current.value = '';
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const invalid = validateProductImage(file);
+        if (invalid) {
+            clearImage();
+            setImageError(t(invalid));
+            return;
+        }
+        setImageError(null);
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
 
     const validate = (): boolean => {
         const newErrors: FormErrors = {};
@@ -137,6 +171,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuc
                 status: qty > 0 ? 'active' : 'incomplete',
             });
 
+            // La imagen es opcional: si falla, el producto ya está creado (no se revierte).
+            if (imageFile && canUploadImage && result.productId) {
+                try {
+                    await productService.setProductImage({
+                        id: result.productId,
+                        tenant_id: profile.tenant_id,
+                        name: upper(form.name),
+                        caliber: upper(form.caliber),
+                        quality: upper(form.quality),
+                    }, imageFile);
+                } catch {
+                    setImageWarning(t('inventory.image.uploadAfterCreate'));
+                }
+            }
+
             import('../../../../services/auditService').then(({ auditService }) => {
                 auditService.logAction('CREATE', 'inventario', result.productId, {
                     name: upper(form.name),
@@ -159,6 +208,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuc
         setErrors({});
         setIsDuplicate(false);
         setSuccessData(null);
+        setImageWarning(null);
+        clearImage();
     };
 
     return (
@@ -232,6 +283,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuc
                                 </span>
                             </div>
                         </div>
+
+                        {imageWarning && (
+                            <p role="alert" className="w-full text-caption text-warning-dark bg-warning/10 border border-warning/30 rounded-lg p-sm">
+                                {imageWarning}
+                            </p>
+                        )}
 
                         <div className="flex gap-sm w-full">
                             <Button
@@ -336,6 +393,53 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSuc
                                     onChange={e => handleChange('entry_date', e.target.value)}
                                 />
                                 <div />
+                                {canUploadImage && (
+                                    <div className="md:col-span-2 flex flex-col gap-xs">
+                                        <span className="text-caption font-medium text-heading">{t('inventory.image.label')}</span>
+                                        <div className="flex items-center gap-sm">
+                                            {imagePreview ? (
+                                                <img
+                                                    data-testid="product-image-preview"
+                                                    src={imagePreview}
+                                                    alt={t('inventory.image.label')}
+                                                    className="w-16 h-16 rounded-md object-cover border border-border"
+                                                />
+                                            ) : (
+                                                <div className="w-16 h-16 rounded-md bg-surface border border-dashed border-border flex items-center justify-center text-text-secondary">
+                                                    <ImagePlus size={20} aria-hidden="true" />
+                                                </div>
+                                            )}
+                                            <input
+                                                ref={imageInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                className="hidden"
+                                                data-testid="product-image-input"
+                                                onChange={handleImageChange}
+                                            />
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() => imageInputRef.current?.click()}
+                                                disabled={isSubmitting}
+                                            >
+                                                {t('inventory.image.label')}
+                                            </Button>
+                                            {imageFile && (
+                                                <button
+                                                    type="button"
+                                                    onClick={clearImage}
+                                                    className="p-1.5 rounded-full text-text-secondary hover:text-error hover:bg-error/10 transition-colors"
+                                                    title={t('inventory.image.remove')}
+                                                    aria-label={t('inventory.image.remove')}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-caption text-text-secondary">{t('inventory.image.hint')}</p>
+                                        {imageError && <p role="alert" className="text-error text-caption">{imageError}</p>}
+                                    </div>
+                                )}
                                 <InputField
                                     label="Cantidad (unidades) *"
                                     type="number"

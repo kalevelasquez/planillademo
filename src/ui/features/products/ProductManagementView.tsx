@@ -10,6 +10,7 @@ import { QuarantineTable } from './components/QuarantineTable';
 import { QuarantineCards } from './components/QuarantineCards';
 import { ProductHistoryModal } from './components/ProductHistoryModal';
 import { AddProductModal } from './components/AddProductModal';
+import { ProductImageControl } from './components/ProductImageControl';
 import { useQuarantine } from './hooks/useQuarantine';
 import { Button } from '../../components/Button';
 import { Banner } from '../../components/Banner';
@@ -23,6 +24,7 @@ export const ProductManagementView: React.FC = () => {
     const { t } = useTranslation();
     const { profile, permissions } = useAuthStore();
     const canAddProduct = permissions.find(p => p.resource === 'inventario')?.can_create ?? false;
+    const canEditInventory = permissions.find(p => p.resource === 'inventario')?.can_edit ?? false;
     const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
     const [localProducts, setLocalProducts] = useState<Product[]>([]);
     const [storeLoading, setStoreLoading] = useState(false);
@@ -341,6 +343,17 @@ export const ProductManagementView: React.FC = () => {
         } finally {
             setIsSavingStock(false);
         }
+    };
+
+    // La imagen aplica a todos los lotes del grupo (tenant + nombre + calibre + calidad):
+    // reflejarlo en el estado local sin recargar la lista.
+    const handleProductImageChange = (product: Product, imageUrl: string | null) => {
+        const sameGroup = (x: Product) =>
+            x.id === product.id ||
+            (x.caliber === product.caliber && x.quality === product.quality &&
+                x.name.trim().toLowerCase() === product.name.trim().toLowerCase());
+        setLocalProducts(prev => prev.map(x => (sameGroup(x) ? { ...x, image_url: imageUrl } : x)));
+        showToast(t(imageUrl ? 'inventory.image.updated' : 'inventory.image.removed'), 'success');
     };
 
     const handleCancelStock = () => {
@@ -901,6 +914,12 @@ export const ProductManagementView: React.FC = () => {
                             {filteredProducts.map(p => (
                                 <div key={p.id} className="bg-white rounded-lg shadow-cards border border-border p-md flex flex-col gap-sm">
                                     <div className="flex justify-between items-start gap-2">
+                                        <ProductImageControl
+                                            product={p}
+                                            canEdit={canEditInventory}
+                                            onChange={url => handleProductImageChange(p, url)}
+                                            onError={msg => showToast(msg, 'error')}
+                                        />
                                         <div className="flex-1 min-w-0">
                                             <h3 className={`text-h3 font-display transition-colors ${p.status === 'unavailable' ? 'text-text-secondary opacity-60' : 'text-heading'}`}>
                                                 {p.name}
@@ -1146,9 +1165,19 @@ export const ProductManagementView: React.FC = () => {
                                                     <div className="font-bold text-primary truncate" title={p.shipment_number}>{p.shipment_number}</div>
                                                     <div className="text-[10px] text-text-secondary mt-1 truncate" title={p.sku_sintetico || 'PENDIENTE'}>{p.sku_sintetico || 'PENDIENTE'}</div>
                                                 </td>
-                                                <td className="p-md truncate">
-                                                    <div className={`font-bold transition-all truncate ${p.status === 'unavailable' ? 'text-text-secondary line-through' : 'text-heading'}`} title={p.name}>{p.name}</div>
-                                                    <div className="text-caption text-text-secondary truncate" title={`${t('products.table_brand')}: ${p.brand} | Cat: ${p.category || t('products.other_category')}`}>{t('products.table_brand')}: {p.brand} | Cat: <span className="capitalize">{p.category || t('products.other_category')}</span></div>
+                                                <td className="p-md">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <ProductImageControl
+                                                            product={p}
+                                                            canEdit={canEditInventory}
+                                                            onChange={url => handleProductImageChange(p, url)}
+                                                            onError={msg => showToast(msg, 'error')}
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className={`font-bold transition-all truncate ${p.status === 'unavailable' ? 'text-text-secondary line-through' : 'text-heading'}`} title={p.name}>{p.name}</div>
+                                                            <div className="text-caption text-text-secondary truncate" title={`${t('products.table_brand')}: ${p.brand} | Cat: ${p.category || t('products.other_category')}`}>{t('products.table_brand')}: {p.brand} | Cat: <span className="capitalize">{p.category || t('products.other_category')}</span></div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td className="p-md text-body truncate">
                                                     <div className="truncate" title={p.quality}>{p.quality}</div>
