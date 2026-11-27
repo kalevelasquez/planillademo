@@ -42,3 +42,5 @@ supabase/.branch/
 /playwright-report/
 /test-results/
 /blob-report/
+# SDD skill registry (local, generado)
+.atl/

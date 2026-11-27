@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  Tech stack: React 19 + Vite 7 + TypeScript 5.9 SPA (PWA via vite-plugin-pwa), Tailwind v4 (@theme tokens in src/ui/styles/index.css), zustand 5, react-router 7, zod 4, react-i18next (public/locales/{es,en}).
+  Backend: Supabase (supabase/migrations ~250; multi-tenant, RLS via get_auth_tenant_id()/get_auth_roles() reading JWT user_metadata). Deploy: Vercel.
+  Architecture: src/{services,store,hooks,types,utils,ui/features/*,ui/styles,config,context}; features by domain (planilla, products...).
+  Testing: vitest 4 + jsdom + @testing-library/react (unit/integration), Playwright (e2e). Tests colocated *.test.ts(x).
+  Style: eslint 9 (typescript-eslint, react-hooks, react-refresh); no prettier. Conventional commits, no AI attribution.
+  Constraints: node_modules not installed locally; never build; shell: use bat/rg/fd/sd/eza.
+
+strict_tdd: true
+
+testing:
+  runner:
+    framework: vitest
+    command: npx vitest run   # package.json scripts.test = "vitest run"
+    environment: jsdom
+    setup: src/test/setup.ts
+  layers:
+    unit: { available: true, tool: vitest }
+    integration: { available: true, tool: "@testing-library/react + user-event + jest-dom" }
+    e2e: { available: true, tool: "playwright (npm run test:e2e)" }
+  coverage: { available: false, command: null, note: "@vitest/coverage-* not in devDependencies" }
+  quality:
+    linter: { available: true, command: "npm run lint (eslint .)" }
+    type_checker: { available: true, command: "npx tsc -b --noEmit (part of build; do NOT run build)" }
+    formatter: { available: false, command: null }
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+    - Flag any DB migration / RLS impact (multi-tenant) explicitly
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - New user-facing strings MUST go in both public/locales/es and en
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Strict TDD - write failing test first (vitest), then implement
+    - Never run build; never commit unless asked
+  verify:
+    - Run tests if test infrastructure exists
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)
