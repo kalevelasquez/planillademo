@@ -581,3 +581,21 @@ BEGIN
 END $$;
 
 ROLLBACK;
+
+-- =============================================================================
+-- A2 (0c) - Escenarios de blindaje de RPCs SECURITY DEFINER  (ACH-24 .. ACH-31)
+-- Implementados como autoverificacion DENTRO de supabase/migrations/20261129090000_blindar_rpcs_definer.sql
+-- (casos con sujeto real/JWT simulados) y, los que requieren DOS tenants con datos, en
+-- supabase/tests/sql/f0_rpc_hardening.test.sql (H1..H12, prueba local en Postgres desechable).
+--   ACH-24 cliente de tienda (authenticated sin perfil, claims/metadata hostiles) NO ejecuta
+--          assert_internal_user-protegidas: create_direct_order_atomic, confirm_order_atomic,
+--          get_report_*, get_dashboard_metrics, get_sales_trend, sync_inventory_catalog, next_order_number
+--   ACH-25 admin con p_tenant_id ajeno => c0_guard (no filtra datos ni crea pedidos)
+--   ACH-26 rol sin permiso (pedidos.create / reportes.view / inventario.edit) => c0_guard
+--   ACH-27 confirm_order_atomic sobre borrador de otro tenant => indistinguible de inexistente
+--   ACH-28 fn_crear_notificacion / fn_notificar_preparador_y_admins_planilla / seed_default_permissions:
+--          sin EXECUTE para authenticated/anon; el camino legitimo (funciones DEFINER) sigue funcionando
+--   ACH-29 fn_notificar_aprobadores_planilla: solo notifica dentro del tenant de la sesion
+--   ACH-30 log_tech_error / increment_error_metrics ignoran el tenant del parametro
+--   ACH-31 anon no ejecuta ninguna RPC blindada (salvo log_tech_error)
+-- =============================================================================
