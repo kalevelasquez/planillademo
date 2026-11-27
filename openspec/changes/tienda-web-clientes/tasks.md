@@ -64,9 +64,11 @@
 > Nota B2 (implementado): `PublicApp` aun no existe, asi que `App.tsx` usa un gate interino `RootGate` en `/` (sesion -> `/inicio`, sin sesion -> `/login`, conserva search/hash; sin bootstrap admin). B4.4 lo reemplaza por la landing. `isStorePath` cubre solo `/tienda*` y `/cuenta*` ("/" excluido a proposito: el Site URL de Supabase puede traer tokens admin). `lazyWithRetry` se extrajo a `src/utils/lazyWithRetry.ts`. `src/test/setup.ts` suma un shim de `localStorage` (Node >= 25 lo rompe en jsdom).
 
 ### Batch B3 - Imagen en inventario (3 tareas)
-- [ ] B3.1 RED->GREEN `uploadProductImage(file)` en `storageService.ts` + `productService.ts` (valida tipo jpg/png/webp y 2 MB, ruta `{tenant}/{product}-{ts}.webp`, guarda `image_url`). Test vitest con supabase mockeado. (PI Subir valida, Archivo invalido)
-- [ ] B3.2 Modificar `AddProductModal.tsx`: campo imagen con preview y mensajes i18n es/en.
-- [ ] B3.3 Crear `ProductImage` (placeholder) en `src/ui/features/store/components/` con test. (PI Producto sin imagen)
+- [x] B3.1 RED->GREEN `uploadProductImage(file)` en `storageService.ts` + `productService.ts` (valida tipo jpg/png/webp y 2 MB, ruta `{tenant}/{product}-{ts}.webp`, guarda `image_url`). Test vitest con supabase mockeado. (PI Subir valida, Archivo invalido)
+- [x] B3.2 Modificar `AddProductModal.tsx`: campo imagen con preview y mensajes i18n es/en.
+- [x] B3.3 Crear `ProductImage` (placeholder) en `src/ui/features/store/components/` con test. (PI Producto sin imagen)
+
+> Nota B3 (implementado): la imagen es POR GRUPO de catalogo (tenant + lower(nombre) + calibre + calidad): `productService.setProductImage` sube un objeto `{tenant}/{product}-{ts}.{ext}` (ext real segun mime; upsert=false, cacheControl 1 anio; el timestamp hace la URL unica = cache busting) y hace UPDATE de `image_url` en TODOS los lotes del grupo; si el UPDATE falla o afecta 0 filas borra el objeto subido; tras el UPDATE borra los objetos viejos que ya nadie referencia. `removeProductImage` pone NULL en el grupo. UI: `ProductImageControl` (miniatura + camara + quitar) en cada fila/tarjeta de Inventario y campo de imagen en `AddProductModal`, ambos solo con `inventario.can_edit`. Claves nuevas `inventory.image.{hint,remove,updated,removed,uploadAfterCreate}`.
 
 ### Batch B4 - Paginas publicas (catalogo y landing) (6 tareas)
 - [ ] B4.1 RED->GREEN `storeService.ts` (`listProducts`, `getProduct`, mapeo de errores) + test.
