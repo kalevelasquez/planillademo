@@ -2,66 +2,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { pwaOptions, adminChunkFileNames } from './pwa.config'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
-      manifest: {
-        name: 'Teknergy - Sistema de Planilla',
-        short_name: 'Teknergy',
-        description: 'Plataforma de gestión de planilla de Teknergy.',
-        theme_color: '#122255',
-        background_color: '#FFFFFF',
-        display: 'standalone',
-        start_url: '/',
-        scope: '/',
-        orientation: 'portrait-primary',
-        icons: [
-          {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/maskable-icon.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallback: 'index.html',
-      },
-      devOptions: {
-        enabled: true
-      }
-    })
+    VitePWA(pwaOptions),
   ],
   build: {
     rollupOptions: {
       output: {
+        // Prefijo `admin-` para los chunks del shell admin (se excluyen del precache, ver pwa.config.ts).
+        chunkFileNames: adminChunkFileNames,
         manualChunks: {
           'pdf-engine': ['@react-pdf/renderer'],
           'ui-icons': ['lucide-react'],
