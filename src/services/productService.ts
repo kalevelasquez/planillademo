@@ -1,6 +1,16 @@
 // [AI: DEDUPLICATION_FIX_APPLIED_V2]
 import { supabase } from './authService';
 import { Logger } from '../utils/logger';
+import { storageService, validateProductImage, ProductImageError } from './storageService';
+
+/** Datos mínimos de un lote para operar su imagen (grupo = tenant + nombre + calibre + calidad). */
+export interface ImageTarget {
+    id: string;
+    tenant_id: string;
+    name: string;
+    caliber: string;
+    quality: string;
+}
 
 export interface ProductCategory {
     id: string;
@@ -23,6 +33,7 @@ export interface Product {
     entry_date?: string | null;
     available_quantity: number;
     price: number;
+    image_url?: string | null; // URL pública del bucket product_images (NULL => placeholder)
     created_at: string;
     product_categories?: {
         name: string;
@@ -531,6 +542,85 @@ export const productService = {
         }
 
         return allProducts;
+    },
+
+    /**
+     * Lotes del mismo grupo de catálogo que `product` (tenant + nombre sin distinguir
+     * mayúsculas + calibre + calidad: misma clave que `store_catalog_groups`).
+     * Siempre incluye al propio producto.
+     */
+    async _getImageGroup(product: ImageTarget): Promise<Array<{ id: string; image_url: string | null }>> {
+        const { data, error } = await supabase
+            .from('products')
+            .select('id, name, caliber, quality, image_url')
+            .eq('tenant_id', product.tenant_id)
+            .eq('caliber', product.caliber)
+            .eq('quality', product.quality);
+        if (error) throw error;
+
+        const lname = product.name.trim().toLowerCase();
+        const group = ((data ?? []) as Array<{ id: string; name: string; image_url: string | null }>)
+            .filter(l => l.id === product.id || (l.name ?? '').trim().toLowerCase() === lname)
+            .map(l => ({ id: l.id, image_url: l.image_url ?? null }));
+        if (!group.some(l => l.id === product.id)) group.push({ id: product.id, image_url: null });
+        return group;
+    },
+
+    /** Borra del bucket las imágenes viejas que ya ningún producto referencia (best-effort). */
+    async _cleanupOrphanImages(oldUrls: Array<string | null>, keepUrl: string | null): Promise<void> {
+        const candidates = [...new Set(oldUrls.filter((u): u is string => Boolean(u) && u !== keepUrl))];
+        if (candidates.length === 0) return;
+        try {
+            const { data } = await supabase
+                .from('products')
+                .select('image_url')
+                .in('image_url', candidates);
+            const stillUsed = new Set((data ?? []).map((r: { image_url: string }) => r.image_url));
+            const orphans = candidates.filter(u => !stillUsed.has(u));
+            if (orphans.length) await storageService.removeProductImagesByUrl(orphans);
+        } catch (err) {
+            Logger.warn('No se pudieron limpiar imágenes huérfanas', { candidates }, err);
+        }
+    },
+
+    /**
+     * Sube/reemplaza la imagen del producto y la aplica a TODOS los lotes de su grupo de
+     * catálogo (la tienda agrupa lotes; así la foto no desaparece al agotarse un lote).
+     * Orden: subir (URL única) -> UPDATE -> limpiar objetos viejos. Si el UPDATE falla o no
+     * afecta filas, se revierte el objeto recién subido. Devuelve la URL pública.
+     */
+    async setProductImage(product: ImageTarget, file: File): Promise<string> {
+        const invalid = validateProductImage(file);
+        if (invalid) throw new ProductImageError(invalid);
+
+        const group = await this._getImageGroup(product);
+        const { path, publicUrl } = await storageService.uploadProductImage(product.tenant_id, product.id, file);
+
+        const { data, error } = await supabase
+            .from('products')
+            .update({ image_url: publicUrl })
+            .in('id', group.map(l => l.id))
+            .select('id');
+
+        if (error || !data || data.length === 0) {
+            await storageService.removeProductImagePaths([path]).catch(() => undefined);
+            throw new ProductImageError('inventory.image.uploadError', error?.message ?? 'update sin filas');
+        }
+
+        await this._cleanupOrphanImages(group.map(l => l.image_url), publicUrl);
+        return publicUrl;
+    },
+
+    /** Quita la imagen de todos los lotes del grupo y borra los objetos huérfanos. */
+    async removeProductImage(product: ImageTarget): Promise<void> {
+        const group = await this._getImageGroup(product);
+        const { error } = await supabase
+            .from('products')
+            .update({ image_url: null })
+            .in('id', group.map(l => l.id))
+            .select('id');
+        if (error) throw new ProductImageError('inventory.image.uploadError', error.message);
+        await this._cleanupOrphanImages(group.map(l => l.image_url), null);
     },
 
     /**
