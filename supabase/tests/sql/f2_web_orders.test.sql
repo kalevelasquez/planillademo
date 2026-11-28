@@ -1,0 +1,60 @@
+-- =============================================================================
+-- F2 / C1.1 - Escenarios de referencia: pedidos web (tienda-web-clientes)
+--
+-- DOCUMENTO DE REFERENCIA. Las assertions EJECUTABLES viven dentro de las migraciones
+-- (bloques DO autoverificables con fixtures que se deshacen y RAISE EXCEPTION => rollback):
+--   * supabase/migrations/20261208090000_pedidos_web_origen.sql      (bloques A y B: B1..B7)
+--   * supabase/migrations/20261208100000_rpc_store_create_order.sql   (bloques A y B: I*, V*, F*, H*, L*, N*, A*, D*, Z*)
+-- Este archivo mapea cada escenario del spec a su assertion (el equipo no usa el SQL editor).
+--
+-- Verificacion previa al merge (reproducible, descartable): Postgres 16 en podman con stubs de
+-- auth + migraciones 0a, 0b, B1.2, B1.3, 0c, 0d + C1.2 + C1.3. RED = la verificacion sola contra la BD
+-- previa (falla: no existen las columnas/funciones); GREEN = migracion completa; idempotente
+-- (segunda corrida); mutantes (cada assertion detecta su mutante); ida y vuelta con los down.
+-- =============================================================================
+
+-- ---------- spec store-web-orders (SWO) -----------------------------------------------------
+-- Anon rechazado ............................ I1 (sin EXECUTE: 42501), I9/I10 (mis pedidos / mi cuenta)
+-- Sin sesion util ........................... I2 (authenticated sin sub: 42501 auth_required)
+-- Personal interno rechazado ................ I3 (42501 forbidden), I3b, I3c
+-- Tenant falsificado ........................ H1 (payload con tenant_id ajeno + claims hostiles): H1a pedido en el tenant del cliente
+-- Cliente falsificado ....................... H1 (customer_id ajeno): H1a (0 pedidos del cliente ajeno)
+-- Seller falsificado ........................ H1 (seller_id en el payload): H1a (seller_id NULL)
+-- Tienda deshabilitada ...................... I8 (tenant sin tienda), D1 (la tienda pasa a otro tenant)
+-- Cliente de otro tenant / otra tienda ...... D2 (product_key de A desde B: SW002), D3/D3a (B compra lo suyo)
+-- Sin cliente / inactivo / borrado .......... I4, I5, I6 (SW008)
+-- No confirmado ............................. I7 (SW007)
+-- Precio manipulado ......................... H1 (price 0.01 / unit_price / total_price): H1b (precios del servidor), H1c (64.00, no 0.05)
+-- Lote mas antiguo / FIFO ................... H1b (5 de G1 = 3 @10 en el lote viejo + 2 @12 en el siguiente)
+-- Cantidad parte lotes (3 lotes) ............ H2/H2a (9 = 3 + 4 + 2 con el lote sin entry_date al final), F1/F1a (17 = 3 + 4 + 10)
+-- Lotes vacios / inactivos omitidos ......... H1b/H2a (el lote vacio mas antiguo y el inactivo no aparecen), V17 (solo inactivos: SW002)
+-- Stock sin descuento ....................... H1d, Z1 (stock identico antes y despues)
+-- Orden creada .............................. H1a (Pending, origin web, seller NULL, PED-YYYYMMDD-NNNN), N2 (formato)
+-- Numeracion compartida ..................... N1 (la secuencia avanza 1 por pedido creado, consecutivos); V24 (rechazos no la consumen)
+-- Pedido interno intacto .................... C1.2 B1 (default origin interno), B5/B7 (interno sin vendedor sigue rechazado)
+-- Carrito vacio ............................. V1, V2 (no arreglo), V3 (NULL)
+-- Cantidad invalida (0, -1, 1.5) ............ V5, V6, V7, V8 (texto), V9 (null), V10 (sin cantidad)
+-- Cantidad sobre el limite .................. V11 (501)
+-- Demasiados items .......................... V4 (31)
+-- Duplicados ................................ V13
+-- Producto inexistente / otro tenant ........ V15, V16, V17
+-- Spam de pendientes ........................ L1/L1a (cuarto pedido Pending rechazado; 3 existentes)
+-- Stock insuficiente (generico) ............. V18 (agotado), V19 (sin precio), V20 (18 de 17), V21 (500), V22 (mezcla: rechaza todo)
+--                                             todos: sin digitos en mensaje/detalle, hint vacio, detalle = solo el nombre; V23/V24 sin orden ni numero
+-- Notas ..................................... H2a (600 caracteres => 500)
+
+-- ---------- spec store-customer-accounts (SCA) -----------------------------------------------
+-- Ver solo lo propio ........................ A1, A4, D4 (cada cliente ve solo sus pedidos), A6 (mi cuenta)
+-- Acceso a otro cliente ..................... A1/D4 (cliente B no ve los de A), A5 (sin cliente: 0 filas), I3b/I3c (personal: 42501)
+-- Sin lotes ni ids en la respuesta .......... A2 (items agrupados por producto, llaves exactas), A3 (G1 = 5 un. y 54.00), A7 (6 columnas de la cuenta)
+-- Cuenta con la tienda deshabilitada ........ D5
+
+-- ---------- Catalogo de funciones (bloque A de C1.3) -----------------------------------------
+-- Firma, RETURNS exacto, SECURITY DEFINER, search_path fijo, EXECUTE solo authenticated (anon/PUBLIC no),
+-- sin lectura de user_metadata/app_metadata, usa auth.uid(), sin UPDATE sobre products, sin sobrecargas.
+
+-- ---------- Pendiente de verificar en vivo (no se puede en la migracion) ----------------------
+-- * Concurrencia del limite de Pending: el advisory lock serializa por cliente; se prueba a mano con dos
+--   sesiones (BEGIN en ambas, la segunda espera al COMMIT de la primera) o desde el front con doble clic.
+-- * Con el signup deshabilitado no existe aun ningun cliente de tienda real: el recorrido de punta a punta
+--   (registro -> confirmacion -> pedido) se prueba en C3.
