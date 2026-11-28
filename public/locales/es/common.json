@@ -2413,7 +2413,10 @@
         "install_desc": "Agregue acceso directo a su pantalla de inicio para una mejor experiencia móvil.",
         "install_button": "Instalar App",
         "ios_msg": "En iOS, pulsa Compartir y luego 'Añadir a la pantalla de inicio'.",
-        "not_now": "Más tarde"
+        "not_now": "Más tarde",
+        "offline_ready_title": "App lista para usar sin conexión",
+        "offline_ready_desc": "La aplicación se ha optimizado para trabajar incluso sin internet.",
+        "close": "Cerrar"
     },
     "store": {
         "nav": {
@@ -2514,6 +2517,14 @@
         "errors": {
             "store_unavailable": "La tienda no está disponible por el momento.",
             "product_unavailable": "Este producto ya no está disponible.",
+            "auth_required": "Iniciá sesión con tu cuenta de cliente para hacer un pedido.",
+            "email_unconfirmed": "Confirmá tu correo electrónico antes de hacer un pedido.",
+            "too_many_pending": "Ya tenés varios pedidos pendientes. Esperá a que los confirmemos para hacer otro.",
+            "invalid_items": "El carrito no es válido. Revisalo e intentá de nuevo.",
+            "too_many_items": "El pedido tiene demasiados productos. Dividilo en dos pedidos.",
+            "invalid_quantity": "Alguna cantidad no es válida. Revisá el carrito.",
+            "insufficient_availability": "No hay suficiente disponibilidad de {{product}}, probá con una cantidad menor.",
+            "insufficient_availability_generic": "No hay suficiente disponibilidad de uno de los productos, probá con una cantidad menor.",
             "generic": "Ocurrió un error inesperado. Intentá de nuevo."
         },
         "footer": {

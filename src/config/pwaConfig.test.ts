@@ -58,12 +58,6 @@ describe('pwaOptions', () => {
         expect(admin!.urlPattern.test('/assets/index-abc123.js')).toBe(false);
     });
 
-    it('no intercepta /api/ con el navigateFallback', () => {
-        const w = pwaOptions.workbox as { navigateFallback: string; navigateFallbackDenylist: RegExp[] };
-        expect(w.navigateFallback).toBe('index.html');
-        expect(w.navigateFallbackDenylist.some((r) => r.test('/api/health'))).toBe(true);
-    });
-
     it('devOptions apagado (el SW en dev interfiere con el HMR y con la tienda)', () => {
         expect(pwaOptions.devOptions).toEqual({ enabled: false });
     });

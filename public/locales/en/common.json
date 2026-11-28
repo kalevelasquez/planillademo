@@ -2407,7 +2407,10 @@
         "install_button": "Install App",
         "ios_msg": "On iOS, tap Share and then 'Add to Home Screen'.",
         "not_now": "Not now",
-        "pwa_ios_guide_dismiss": "Got it"
+        "pwa_ios_guide_dismiss": "Got it",
+        "offline_ready_title": "App ready to use offline",
+        "offline_ready_desc": "The app has been optimized to work even without internet.",
+        "close": "Close"
     },
     "store": {
         "nav": {
@@ -2508,6 +2511,14 @@
         "errors": {
             "store_unavailable": "The store is not available right now.",
             "product_unavailable": "This product is no longer available.",
+            "auth_required": "Sign in with your customer account to place an order.",
+            "email_unconfirmed": "Please confirm your email address before placing an order.",
+            "too_many_pending": "You already have several pending orders. Wait until we confirm them before placing another.",
+            "invalid_items": "Your cart is not valid. Please review it and try again.",
+            "too_many_items": "The order has too many products. Please split it into two orders.",
+            "invalid_quantity": "One of the quantities is not valid. Please review your cart.",
+            "insufficient_availability": "There is not enough availability of {{product}}, please try a smaller quantity.",
+            "insufficient_availability_generic": "There is not enough availability of one of the products, please try a smaller quantity.",
             "generic": "Something went wrong. Please try again."
         },
         "footer": {

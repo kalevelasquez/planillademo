@@ -46,6 +46,29 @@ export const pwaOptions: Partial<VitePWAOptions> = {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         globIgnores: ['**/admin-*.js', '**/pdf-engine-*.js'],
         runtimeCaching: [
+            // Navegaciones (HTML): red primero, para que index.html NUNCA quede viejo tras un deploy.
+            // Reemplaza a navigateFallback, que servia el index.html precacheado (cache-first) y
+            // dejaba al usuario con el bundle anterior hasta que el SW nuevo se activaba.
+            // Offline: todas las rutas SPA comparten la clave '/index.html'; si no hay entrada en
+            // 'pages' se cae al index.html precacheado. Los plugins se serializan dentro del SW:
+            // deben ser autocontenidos (sin imports ni variables externas).
+            {
+                urlPattern: ({ request, url }: { request: { mode: string }; url: URL }) =>
+                    request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
+                handler: 'NetworkFirst',
+                options: {
+                    cacheName: 'pages',
+                    networkTimeoutSeconds: 3,
+                    plugins: [
+                        { cacheKeyWillBeUsed: async () => '/index.html' },
+                        {
+                            handlerDidError: async () =>
+                                (globalThis as unknown as { caches: { match: (k: string, o: object) => Promise<Response | undefined> } })
+                                    .caches.match('/index.html', { ignoreSearch: true }),
+                        },
+                    ],
+                },
+            },
             {
                 urlPattern: /\/assets\/(admin|pdf-engine)-.*\.js$/,
                 handler: 'CacheFirst',
@@ -59,8 +82,6 @@ export const pwaOptions: Partial<VitePWAOptions> = {
         clientsClaim: true,
         skipWaiting: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
     },
     devOptions: {
         enabled: false,
