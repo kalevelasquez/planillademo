@@ -85,11 +85,13 @@
 ## F2 - Cuentas de cliente y pedidos web (requiere 0d aplicado)
 
 ### Batch C1 - SQL de pedidos web (5 tareas)
-- [ ] C1.1 RED `supabase/tests/sql/f2_web_orders.test.sql`: vacio, 0/-1/1.5, maximos, duplicado, otro tenant, agotado, precio manipulado, tenant/customer falsificado, tienda deshabilitada, no confirmado, limite de Pending, sin descuento de stock, **split FIFO entre lotes (items multiples)**, anon rechazado, origin interno intacto. (SWO todos, SCA Ver solo lo propio/Acceso a otro cliente)
-- [ ] C1.2 `supabase/migrations/20261208090000_pedidos_web_origen.sql` (+down): `orders.origin`, `seller_id` nullable + CHECK, `rejection_reason`, indice parcial.
-- [ ] C1.3 `supabase/migrations/20261208100000_rpc_store_create_order.sql` (+down): `store_create_order` con split FIFO (ordena lotes `entry_date NULLS LAST, created_at`, un `order_items` por lote, precio del lote), `store_get_my_account`, `store_list_my_orders`; REVOKE/GRANT solo authenticated.
-- [ ] C1.4 Actualizar `design.md` y `specs/store-web-orders/spec.md` con el split FIFO y la regla de stock total insuficiente.
+- [x] C1.1 (HECHO: referencia en `f2_web_orders.test.sql`; las assertions ejecutables viven en las migraciones C1.2/C1.3 y se escribieron ANTES de la implementacion, RED verificado) RED `supabase/tests/sql/f2_web_orders.test.sql`: vacio, 0/-1/1.5, maximos, duplicado, otro tenant, agotado, precio manipulado, tenant/customer falsificado, tienda deshabilitada, no confirmado, limite de Pending, sin descuento de stock, **split FIFO entre lotes (items multiples)**, anon rechazado, origin interno intacto. (SWO todos, SCA Ver solo lo propio/Acceso a otro cliente)
+- [x] C1.2 (HECHO + `rollback/20261208090000_pedidos_web_origen.down.sql`; validado RED/GREEN/idempotente/9 mutantes/ida-vuelta en PG16 podman) `supabase/migrations/20261208090000_pedidos_web_origen.sql` (+down): `orders.origin`, `seller_id` nullable + CHECK, `rejection_reason`, indice parcial.
+- [x] C1.3 (HECHO + `rollback/20261208100000_rpc_store_create_order.down.sql`; 24 mutantes muertos; ademas `createStoreOrder` en `src/services/storeService.ts` con 34 tests y claves `store.errors.*` es/en) `supabase/migrations/20261208100000_rpc_store_create_order.sql` (+down): `store_create_order` con split FIFO (ordena lotes `entry_date NULLS LAST, created_at`, un `order_items` por lote, precio del lote), `store_get_my_account`, `store_list_my_orders`; REVOKE/GRANT solo authenticated.
+- [x] C1.4 (HECHO: stock total insuficiente = rechazo generico SW001, sin cantidades) Actualizar `design.md` y `specs/store-web-orders/spec.md` con el split FIFO y la regla de stock total insuficiente.
 - [ ] C1.5 [MANUAL] Merge a `main` (aplica y autoverifica; `f2_web_orders.test.sql` como referencia). Smoke check admin. Aun NO habilitar el front de cuenta.
+
+> Nota C1 (implementado, sin commitear): `store_create_order` NO descuenta stock (lo hace D2 al aprobar). Reparto FIFO por lote (un `order_items` por lote, precio del lote; lotes con stock < 1, inactivos o sin precio se omiten). Codigos de error por SQLSTATE `SW001..SW008` y `42501` (ver design). Limites: 30 items, cantidad 1..500, 3 Pending por cliente (advisory lock). La RPC llama `nextval('order_number_seq')` directo porque `next_order_number()` exige personal interno (0c); el numero se consume SOLO tras validar todo. La verificacion restaura la secuencia por comparar-y-restaurar. Un pedido web Pending (seller NULL) lo ven admin/supervisor/despachador en Pedidos por la politica por rol existente; el vendedor `own` no hasta D1.
 
 ### Batch C2 - Auth de tienda y carrito (6 tareas)
 - [ ] C2.1 RED->GREEN `src/store/cartStore.ts` (zustand persist `teknergy-cart-v1`, version+migrate, bloquea Agotado, total estimado) + test. (SWO Carrito local)
@@ -128,4 +130,4 @@
 6. Dashboard Supabase: "Confirm email" ON y Redirect URLs `+/cuenta/confirmado` (C3.2), solo despues de 0d.
 7. `store_enabled=true` para el tenant (B4.6/C3).
 8. Reemplazar placeholders de `CONTACT` en `brand.ts` con valores reales.
-9. Decidir stock total insuficiente al crear pedido (C1.4).
+9. ~~Decidir stock total insuficiente al crear pedido (C1.4)~~: decidido, rechazo generico de todo el pedido (SW001).

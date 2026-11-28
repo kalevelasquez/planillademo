@@ -30,7 +30,7 @@ Hay 4 fases desplegables por separado (F0→F3). La seguridad vive en Postgres: 
 | Tenant de tienda | Índice único parcial: como máximo 1 tenant con `store_enabled=true` (v1) | Slug multi-tienda | El trigger resuelve el tenant sin ambigüedad. El multi-tienda está fuera de alcance |
 | Acceso del cliente a sus datos | Solo RPCs (`store_get_my_account`, `store_list_my_orders`) | Policies `auth_user_id=auth.uid()` en tablas | Expone columnas mínimas y no toca las policies admin |
 | Bandeja web para vendedores `own` | Policy SELECT específica `origin='web' AND status='Pending' AND seller_id IS NULL` + RPC `list_pending_web_orders()` con los datos de contacto | Ampliar las policies de `customers` | El vendedor `own` no ve un `customers` sin asignar. La RPC le da solo el contacto necesario. Al aprobar, se asigna `assigned_seller_id` |
-| Lote del pedido | Al crear, el lote activo más antiguo con stock>0 (`entry_date NULLS LAST, created_at`). El precio sale de ese lote | Partir la cantidad entre lotes | Es lo que pide el spec. Partir entre lotes queda como pregunta abierta |
+| Lote del pedido (actualizado C1) | Reparto FIFO: la cantidad se parte entre los lotes activos del grupo con stock >= 1 y precio > 0, del mas antiguo (`entry_date NULLS LAST, created_at, id`) al siguiente; **un `order_items` por lote, al precio de ese lote**. Stock total del grupo < cantidad => se RECHAZA todo el pedido con un mensaje generico (SQLSTATE `SW001`, sin cantidades en mensaje/detalle/hint) | Un solo lote por producto; crear igual con el remanente en el ultimo lote | Decision final del usuario: el cliente nunca ve cuanto hay; la aprobacion (D2, con `FOR UPDATE`) sigue validando el stock real. `approve_web_order` suma por `product_id`, sirve sin cambio |
 | Identificador público del producto | `product_key = md5(lower(name)\|caliber\|quality)` | El id del lote | El spec prohíbe exponer IDs de lote |
 | Descuento de stock | Extender el trigger: `Draft→Approved` OR (`Pending→Approved` AND `origin='web'`) | Cualquier `Pending→Approved` | Puede haber pedidos legacy `Pending` internos (migrados de 'pendiente'), y no deben empezar a descontar |
 | Notificación | Trigger `AFTER INSERT ON orders WHEN origin='web'` (F3) | Llamada dentro de la RPC | F2 y F3 se despliegan por separado; el trigger desacopla |
@@ -152,35 +152,33 @@ approve_web_order(p_order_id uuid) RETURNS text
 reject_web_order(p_order_id uuid, p_reason text) RETURNS void
 ```
 
-### store_create_order (sketch)
+### store_create_order (implementado en C1, `20261208100000_rpc_store_create_order.sql`)
 
 ```sql
-DECLARE c_max_items CONSTANT int := 30; c_max_qty CONSTANT int := 500; c_max_pending CONSTANT int := 3;
-BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'auth_required' USING ERRCODE='42501'; END IF;
-  SELECT c.* INTO v_cust FROM customers c JOIN tenants t ON t.id=c.tenant_id
-   WHERE c.auth_user_id=auth.uid() AND c.deleted_at IS NULL AND t.store_enabled;
-  IF NOT FOUND THEN RAISE EXCEPTION 'store_unavailable'; END IF;
-  IF (SELECT email_confirmed_at FROM auth.users WHERE id=auth.uid()) IS NULL THEN RAISE EXCEPTION 'email_unconfirmed'; END IF;
-  PERFORM pg_advisory_xact_lock(hashtext('store_order:'||v_cust.id));      -- serializa el límite de Pending
-  IF (SELECT count(*) FROM orders WHERE customer_id=v_cust.id AND origin='web' AND status='Pending') >= c_max_pending
-     THEN RAISE EXCEPTION 'too_many_pending'; END IF;
-  -- validación: jsonb_typeof array, 1..c_max_items, product_key sin duplicados,
-  -- quantity entera (jsonb numeric = trunc) entre 1 y c_max_qty
-  FOR v_it IN SELECT * FROM jsonb_to_recordset(p_items) AS x(product_key text, quantity numeric) LOOP
-    SELECT p.id, p.price INTO v_lot FROM products p
-     WHERE p.tenant_id=v_cust.tenant_id AND p.status='active' AND p.available_quantity>0
-       AND md5(lower(p.name)||'|'||coalesce(p.caliber,'')||'|'||coalesce(p.quality,''))=v_it.product_key
-     ORDER BY p.entry_date NULLS LAST, p.created_at LIMIT 1;
-    IF NOT FOUND THEN RAISE EXCEPTION 'product_unavailable:%', v_it.product_key; END IF;   -- inexistente/agotado/otro tenant
-    -- se acumula en un arreglo temporal con price = v_lot.price (se ignora cualquier precio del cliente)
-  END LOOP;
-  INSERT INTO orders(tenant_id, customer_id, seller_id, status, origin, order_number, subtotal, total_amount, notes)
-  VALUES (v_cust.tenant_id, v_cust.id, NULL, 'Pending', 'web', next_order_number(), v_sum, v_sum, left(p_notes,500))
-  RETURNING id, order_number INTO v_order;
-  INSERT INTO order_items(...)  -- on_order_item_created NO descuenta (el padre no está Approved)
-END;
+-- SECURITY DEFINER, search_path fijo, EXECUTE solo authenticated (anon/PUBLIC sin EXECUTE)
+-- 1. auth.uid() NULL                    -> 42501 auth_required
+-- 2. existe user_profiles(auth.uid())   -> 42501 forbidden            (personal interno no compra por la tienda)
+-- 3. customers.auth_user_id=auth.uid(), activo, no borrado, tenant store_enabled e is_active
+--                                       -> si no, SW008 store_unavailable   (tenant y cliente salen de ESA fila)
+-- 4. auth.users.email_confirmed_at      -> si no, SW007 email_unconfirmed
+-- 5. pg_advisory_xact_lock(cliente); >= 3 pedidos Pending web del cliente -> SW006 too_many_pending
+-- 6. payload: array 1..30 (SW005 vacio/no-array/NULL/elemento no objeto/product_key vacio o repetido; SW004 > 30);
+--    quantity numerica entera 1..500 (SW003). Solo se leen product_key y quantity; price/tenant/cliente/vendedor se ignoran
+-- 7. por item, FIFO sobre products (tenant del cliente, status='active', price>0, available_quantity>=1,
+--    md5(lower(name)|caliber|quality)=product_key, ORDER BY entry_date NULLS LAST, created_at, id):
+--    toma min(restante, floor(stock)) de cada lote al precio del lote. Si queda restante:
+--      grupo inexistente/inactivo/otro tenant -> SW002 product_unavailable
+--      stock total insuficiente               -> SW001 'No hay suficiente disponibilidad de <producto>, probá con una cantidad menor'
+--                                                (DETAIL = solo el nombre; sin cantidades; se rechaza TODO el pedido)
+-- 8. recien validado todo: nextval('order_number_seq') (formato PED-YYYYMMDD-NNNN, el de next_order_number; esa funcion exige
+--    personal interno, por eso la RPC usa la secuencia directa). Los rechazos no consumen numero.
+-- 9. INSERT orders (Pending, origin 'web', seller_id NULL, total calculado en servidor, notas <= 500) + 1 order_items por lote.
+--    NO descuenta stock: el trigger solo actua con Approved. RETURNS (order_id, order_number, total)
 ```
+
+**Codigos de error** (el front mapea por SQLSTATE a `store.errors.*`; el mensaje de la base nunca se muestra salvo SW001, que es generico): `42501` auth_required / forbidden, `SW001` insufficient_availability, `SW002` product_unavailable, `SW003` invalid_quantity, `SW004` too_many_items, `SW005` invalid_items, `SW006` too_many_pending, `SW007` email_unconfirmed, `SW008` store_unavailable.
+
+`store_get_my_account()` y `store_list_my_orders()` leen solo la fila ligada a `auth.uid()` (42501 para anon/personal; 0 filas si no hay cliente). Los items del pedido se agrupan por producto (nombre, calibre, calidad, cantidad, precio unitario promedio, total de linea): no se exponen lotes ni ids.
 
 ### approve_web_order (sketch)
 

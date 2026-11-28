@@ -54,9 +54,20 @@ El RPC MUST recalcular precios desde `products.price` ignorando precios del clie
 - THEN el ítem y el total usan 10.00
 
 #### Scenario: Lote más antiguo
-- GIVEN dos lotes activos con distinta antigüedad
+- GIVEN dos lotes activos con distinta antigüedad y stock suficiente en el más antiguo
 - WHEN se crea el pedido
-- THEN el ítem referencia el lote más antiguo
+- THEN el ítem referencia el lote más antiguo (`entry_date` ascendente, sin fecha al final, luego `created_at`)
+
+#### Scenario: Cantidad parte lotes
+- GIVEN el lote más antiguo con stock 3 y el siguiente con stock 4
+- WHEN se pide una cantidad de 5
+- THEN el pedido tiene 2 ítems en lotes distintos: 3 en el más antiguo y 2 en el siguiente, cada uno al precio de su lote
+- AND el total es la suma de cantidad por precio de cada ítem, calculado en el servidor
+
+#### Scenario: Lotes sin stock o inactivos
+- GIVEN lotes del grupo con stock 0, inactivos o sin precio
+- WHEN se reparte la cantidad
+- THEN esos lotes se omiten
 
 #### Scenario: Stock sin descuento
 - GIVEN stock 10 y pedido de 3
@@ -111,11 +122,26 @@ El RPC MUST rechazar: carrito vacío, cantidad <= 0 o no entera, cantidad sobre 
 - WHEN crea otro
 - THEN se rechaza
 
-### Requirement: Pedido sin stock suficiente visible
+### Requirement: Stock total insuficiente
 
-Si el producto está Agotado al crear, el RPC MUST rechazarlo. Si hay stock insuficiente para la cantidad, MAY permitirse (la validación definitiva ocurre al aprobar).
+Si la suma del stock vendible de los lotes del grupo es menor que la cantidad pedida (incluye Agotado), el RPC MUST rechazar TODO el pedido, sin crear orden ni consumir número de pedido. El mensaje MUST ser genérico ("No hay suficiente disponibilidad de <producto>, probá con una cantidad menor") y MUST NOT revelar cantidades disponibles, ni en el mensaje ni en el detalle del error. La validación definitiva contra stock real ocurre además al aprobar (con bloqueo de filas).
 
 #### Scenario: Agotado en servidor
 - GIVEN un producto con stock 0
 - WHEN se incluye en el pedido
-- THEN error y sin orden
+- THEN error genérico y sin orden
+
+#### Scenario: Stock total menor a lo pedido
+- GIVEN un grupo con stock total 17 repartido en 3 lotes
+- WHEN se pide 18
+- THEN se rechaza con el mensaje genérico, sin dígitos de la cantidad disponible, y sin orden
+
+#### Scenario: Una línea insuficiente rechaza todo
+- GIVEN un pedido con una línea válida y otra con stock insuficiente
+- WHEN se llama el RPC
+- THEN no se crea ninguna orden (ni ítems) ni se consume número de pedido
+
+#### Scenario: Exactamente todo el stock
+- GIVEN un grupo con stock total 17
+- WHEN se pide 17
+- THEN se crea el pedido con un ítem por lote (3 lotes) y sin descontar stock
