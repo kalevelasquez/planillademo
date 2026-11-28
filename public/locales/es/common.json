@@ -2420,13 +2420,75 @@
             "catalog": "Catálogo",
             "cart": "Carrito",
             "account": "Mi cuenta",
-            "staffLogin": "Acceso personal"
+            "staffLogin": "Acceso empleados",
+            "home": "Inicio",
+            "panel": "Ir al panel",
+            "main": "Navegación principal",
+            "skip": "Saltar al contenido",
+            "logoLabel": "Teknergy, ir al inicio",
+            "contact": "Contacto"
         },
         "landing": {
             "heroTitle": "Fruta fresca para tu negocio",
             "heroSubtitle": "Consultá nuestro catálogo y la disponibilidad actual, directo desde tu celular.",
             "cta": "Ver catálogo",
-            "contactTitle": "Contacto comercial"
+            "contactTitle": "Contacto comercial",
+            "ctaSecondary": "Cómo pedir",
+            "valueProps": {
+                "title": "Por qué comprar con nosotros",
+                "fresh": {
+                    "title": "Fruta fresca y seleccionada",
+                    "body": "Lotes clasificados por calibre y calidad para que sepas exactamente lo que recibís."
+                },
+                "availability": {
+                    "title": "Disponibilidad al día",
+                    "body": "Consultá qué hay disponible antes de llamar: el catálogo se actualiza con nuestro inventario."
+                },
+                "wholesale": {
+                    "title": "Mayoreo y detalle",
+                    "body": "Atendemos desde pequeños negocios hasta compras al por mayor."
+                },
+                "cod": {
+                    "title": "Pagás al recibir",
+                    "body": "Sin pagos en línea: pagás contra entrega cuando tu pedido llega."
+                }
+            },
+            "featured": {
+                "title": "Productos destacados",
+                "subtitle": "Una muestra de lo que tenemos hoy.",
+                "viewAll": "Ver todo el catálogo"
+            },
+            "how": {
+                "title": "Cómo pedir",
+                "subtitle": "Cuatro pasos simples, de tu celular a tu puerta.",
+                "steps": {
+                    "account": {
+                        "title": "Creá tu cuenta",
+                        "body": "Registrate con tu correo para guardar tus datos de entrega."
+                    },
+                    "order": {
+                        "title": "Armá tu pedido",
+                        "body": "Elegí los productos y las cantidades desde el catálogo."
+                    },
+                    "confirm": {
+                        "title": "Un vendedor confirma",
+                        "body": "Revisamos la disponibilidad y te confirmamos tu pedido."
+                    },
+                    "delivery": {
+                        "title": "Pagás contra entrega",
+                        "body": "Recibís tu pedido y pagás en efectivo al momento de la entrega."
+                    }
+                },
+                "comingSoon": "Próximamente",
+                "comingSoonNote": "Los pedidos en línea estarán disponibles muy pronto. Mientras tanto, escribinos o llamanos para hacer tu pedido."
+            },
+            "contactSubtitle": "Escribinos o llamanos y un asesor te atiende.",
+            "contact": {
+                "email": "Correo",
+                "phone": "Teléfono",
+                "whatsapp": "WhatsApp",
+                "address": "Dirección"
+            }
         },
         "catalog": {
             "search": "Buscar productos",
@@ -2434,12 +2496,29 @@
             "available": "Disponible",
             "soldOut": "Agotado",
             "addToCart": "Agregar al carrito",
-            "price": "Precio"
+            "price": "Precio",
+            "title": "Catálogo",
+            "subtitle": "Disponibilidad actual de nuestros productos.",
+            "searchPlaceholder": "Buscar por nombre, calibre o calidad",
+            "noResults": "No encontramos productos para “{{query}}”.",
+            "unavailableTitle": "Catálogo no disponible",
+            "loading": "Cargando catálogo",
+            "retry": "Reintentar",
+            "caliber": "Calibre {{value}}",
+            "orderSoon": "Pedir (próximamente)",
+            "back": "Volver al catálogo",
+            "priceNote": "Precio de referencia: el vendedor confirma el total de tu pedido.",
+            "notFoundTitle": "Producto no encontrado",
+            "clearSearch": "Limpiar búsqueda"
         },
         "errors": {
             "store_unavailable": "La tienda no está disponible por el momento.",
             "product_unavailable": "Este producto ya no está disponible.",
             "generic": "Ocurrió un error inesperado. Intentá de nuevo."
+        },
+        "footer": {
+            "rights": "Todos los derechos reservados.",
+            "staffAria": "Acceso para el personal de la empresa"
         }
     },
     "inventory": {

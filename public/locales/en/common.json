@@ -2414,13 +2414,75 @@
             "catalog": "Catalog",
             "cart": "Cart",
             "account": "My account",
-            "staffLogin": "Staff login"
+            "staffLogin": "Staff access",
+            "home": "Home",
+            "panel": "Go to dashboard",
+            "main": "Main navigation",
+            "skip": "Skip to content",
+            "logoLabel": "Teknergy, go to home",
+            "contact": "Contact"
         },
         "landing": {
             "heroTitle": "Fresh fruit for your business",
             "heroSubtitle": "Browse our catalog and current availability, straight from your phone.",
             "cta": "View catalog",
-            "contactTitle": "Sales contact"
+            "contactTitle": "Sales contact",
+            "ctaSecondary": "How to order",
+            "valueProps": {
+                "title": "Why buy from us",
+                "fresh": {
+                    "title": "Fresh, hand-picked fruit",
+                    "body": "Lots sorted by caliber and quality so you know exactly what you get."
+                },
+                "availability": {
+                    "title": "Up-to-date availability",
+                    "body": "Check what is in stock before you call: the catalog follows our inventory."
+                },
+                "wholesale": {
+                    "title": "Wholesale and retail",
+                    "body": "We serve small shops as well as bulk purchases."
+                },
+                "cod": {
+                    "title": "Pay on delivery",
+                    "body": "No online payments: you pay cash when your order arrives."
+                }
+            },
+            "featured": {
+                "title": "Featured products",
+                "subtitle": "A sample of what we have today.",
+                "viewAll": "See the full catalog"
+            },
+            "how": {
+                "title": "How to order",
+                "subtitle": "Four simple steps, from your phone to your door.",
+                "steps": {
+                    "account": {
+                        "title": "Create your account",
+                        "body": "Sign up with your email to save your delivery details."
+                    },
+                    "order": {
+                        "title": "Build your order",
+                        "body": "Pick products and quantities from the catalog."
+                    },
+                    "confirm": {
+                        "title": "A salesperson confirms",
+                        "body": "We check availability and confirm your order."
+                    },
+                    "delivery": {
+                        "title": "Pay on delivery",
+                        "body": "You receive your order and pay cash at delivery."
+                    }
+                },
+                "comingSoon": "Coming soon",
+                "comingSoonNote": "Online ordering will be available very soon. In the meantime, write or call us to place your order."
+            },
+            "contactSubtitle": "Write or call us and an advisor will help you.",
+            "contact": {
+                "email": "Email",
+                "phone": "Phone",
+                "whatsapp": "WhatsApp",
+                "address": "Address"
+            }
         },
         "catalog": {
             "search": "Search products",
@@ -2428,12 +2490,29 @@
             "available": "Available",
             "soldOut": "Sold out",
             "addToCart": "Add to cart",
-            "price": "Price"
+            "price": "Price",
+            "title": "Catalog",
+            "subtitle": "Current availability of our products.",
+            "searchPlaceholder": "Search by name, caliber or quality",
+            "noResults": "We found no products for “{{query}}”.",
+            "unavailableTitle": "Catalog unavailable",
+            "loading": "Loading catalog",
+            "retry": "Try again",
+            "caliber": "Caliber {{value}}",
+            "orderSoon": "Order (coming soon)",
+            "back": "Back to catalog",
+            "priceNote": "Reference price: the salesperson confirms the total of your order.",
+            "notFoundTitle": "Product not found",
+            "clearSearch": "Clear search"
         },
         "errors": {
             "store_unavailable": "The store is not available right now.",
             "product_unavailable": "This product is no longer available.",
             "generic": "Something went wrong. Please try again."
+        },
+        "footer": {
+            "rights": "All rights reserved.",
+            "staffAria": "Access for company staff"
         }
     },
     "inventory": {

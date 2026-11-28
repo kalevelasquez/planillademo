@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 
 interface ProductImageProps {
@@ -13,12 +13,11 @@ interface ProductImageProps {
  * Presentacional: sin estado de negocio. Si la imagen falla al cargar, cae al placeholder.
  */
 export const ProductImage: React.FC<ProductImageProps> = ({ src, alt, className = '' }) => {
-    const [failed, setFailed] = useState(false);
+    // Se recuerda QUE url fallo (no un booleano): al cambiar `src` vuelve a intentarse sin efecto ni setState.
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const url = src?.trim() || '';
 
-    useEffect(() => { setFailed(false); }, [url]);
-
-    if (!url || failed) {
+    if (!url || failedUrl === url) {
         return (
             <div
                 data-testid="product-image-placeholder"
@@ -36,7 +35,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({ src, alt, className 
             alt={alt}
             loading="lazy"
             decoding="async"
-            onError={() => setFailed(true)}
+            onError={() => setFailedUrl(url)}
             className={`object-cover ${className}`}
         />
     );
