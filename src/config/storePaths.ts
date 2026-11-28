@@ -56,3 +56,26 @@ export const resolvePostLoginPath = (state: unknown): string => {
 
     return `${pathname}${typeof search === 'string' ? search : ''}${typeof hash === 'string' ? hash : ''}`;
 };
+
+const AUTH_LINK_KEYS = ['access_token', 'refresh_token', 'token_hash', 'error', 'error_code', 'error_description'];
+const AUTH_LINK_TYPES = new Set(['invite', 'recovery', 'signup', 'magiclink', 'email_change']);
+
+const hasAuthKeys = (raw: string): boolean => {
+    const params = new URLSearchParams(raw.replace(/^[?#]/, ''));
+    return AUTH_LINK_KEYS.some((k) => params.has(k)) || AUTH_LINK_TYPES.has(params.get('type') ?? '');
+};
+
+/**
+ * `true` si la URL trae un enlace de email de Supabase del flujo ADMIN (invitacion, recovery,
+ * errores `otp_expired`...). Esos enlaces caen en el Site URL ("/"): ahi NO se muestra la landing,
+ * se entrega al flujo de auth admin (gate de "/") conservando search y hash.
+ */
+export const hasAuthLinkParams = (loc: { search?: string; hash?: string }): boolean =>
+    hasAuthKeys(loc.search ?? '') || hasAuthKeys(loc.hash ?? '');
+
+/**
+ * Destino del boton "Inicio" del ErrorBoundary: en rutas publicas la landing; en cualquier otra
+ * (admin) el dashboard `/inicio`, porque "/" ya no es el dashboard.
+ */
+export const homePathFor = (pathname?: string | null): string =>
+    pathname === ROUTES.LANDING || isStorePath(pathname) ? ROUTES.LANDING : ROUTES.ADMIN_HOME;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ROUTES, isStorePath, isAccountPath, resolvePostLoginPath } from './storePaths';
+import { ROUTES, isStorePath, isAccountPath, resolvePostLoginPath, hasAuthLinkParams, homePathFor } from './storePaths';
 
 describe('storePaths', () => {
     describe('ROUTES', () => {
@@ -62,4 +62,40 @@ describe('storePaths', () => {
             expect(resolvePostLoginPath({ from: 'nope' })).toBe('/inicio');
         });
     });
+});
+
+describe('hasAuthLinkParams (enlaces de email de Supabase que caen en el Site URL "/")', () => {
+    it.each([
+        ['', '#access_token=abc&refresh_token=def&type=invite'],
+        ['', '#access_token=abc&type=recovery'],
+        ['', '#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid'],
+        ['?error=access_denied&error_description=expired', ''],
+        ['?type=recovery&token_hash=xyz', ''],
+        ['', '#type=signup'],
+    ])('search=%j hash=%j => true', (search, hash) => {
+        expect(hasAuthLinkParams({ search, hash })).toBe(true);
+    });
+
+    it.each([
+        ['', ''],
+        ['?utm_source=facebook&ref=promo', ''],
+        ['', '#contacto'],
+        ['', '#como-pedir'],
+        ['?q=access', '#error-page'],
+    ])('visita normal search=%j hash=%j => false', (search, hash) => {
+        expect(hasAuthLinkParams({ search, hash })).toBe(false);
+    });
+});
+
+describe('homePathFor (destino del boton "Inicio" del ErrorBoundary)', () => {
+    it.each(['/', '/tienda', '/tienda/p/abc', '/cuenta'])('%s => "/" (landing publica)', (p) => {
+        expect(homePathFor(p)).toBe('/');
+    });
+
+    it.each(['/inicio', '/inventario', '/planilla/empleados', '/pedidos/123', '/login'])(
+        '%s => /inicio (el panel, ya no "/")',
+        (p) => {
+            expect(homePathFor(p)).toBe('/inicio');
+        },
+    );
 });

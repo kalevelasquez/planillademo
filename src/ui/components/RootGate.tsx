@@ -4,18 +4,15 @@ import { supabase } from '../../config/supabaseClient';
 import { ROUTES } from '../../config/storePaths';
 
 /**
- * Gate INTERINO de "/" (B2). Existe solo hasta que la landing publica (B4) ocupe esa ruta.
- *
- * Mantiene el comportamiento previo para quien entra a "/" (PWA instaladas con start_url '/',
- * links viejos, Site URL de Supabase):
- *   - con sesion admin  -> /inicio (el dashboard, que ya no vive en "/")
+ * Gate de enlaces de email de Supabase en "/" (Site URL). Desde B4 "/" es la landing publica; este
+ * gate SOLO se usa cuando la URL trae un enlace de auth admin (ver `hasAuthLinkParams` y App.tsx):
+ * invitacion, recovery o error (`otp_expired`, `error_description`...). Esos enlaces siguen
+ * llegando al flujo admin:
+ *   - con sesion admin  -> /inicio (el cliente admin ya canjeo el token de la URL)
  *   - sin sesion        -> /login
  *
  * NO ejecuta el bootstrap admin (perfil/permisos): solo lee la sesion local del cliente admin.
- * Conserva `search` y `hash` para que los errores/tokens de enlaces de email que caen en el
- * Site URL (ej. `#error_code=otp_expired`) lleguen intactos a AdminApp.
- *
- * TODO(B4): reemplazar este gate por `LandingPage` en `PublicApp`.
+ * Conserva `search` y `hash` para que los tokens/errores lleguen intactos a AdminApp.
  */
 export function RootGate() {
     const location = useLocation();

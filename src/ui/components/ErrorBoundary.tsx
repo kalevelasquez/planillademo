@@ -9,6 +9,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertCircle, RefreshCcw, Home } from 'lucide-react';
 import { Logger } from '../../utils/logger';
 import { getFriendlyError } from '../../utils/errorMapper';
+import { homePathFor } from '../../config/storePaths';
 
 interface Props {
     children: ReactNode;
@@ -45,7 +46,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
     private handleGoHome = () => {
         this.setState({ hasError: false, error: null });
-        window.location.href = '/';
+        // "/" ya no es el dashboard: en rutas admin vuelve a /inicio; en las publicas, a la landing.
+        window.location.href = homePathFor(window.location.pathname);
     };
 
     public render() {
