@@ -35,7 +35,13 @@ export type StoreErrorKey =
     | 'store.errors.too_many_items'
     | 'store.errors.invalid_quantity'
     | 'store.errors.product_unavailable'
-    | 'store.errors.insufficient_availability';
+    | 'store.errors.insufficient_availability'
+    // Auth de cliente (storeAuthService)
+    | 'store.errors.invalid_credentials'
+    | 'store.errors.signup_unavailable'
+    | 'store.errors.weak_password'
+    | 'store.errors.rate_limited'
+    | 'store.errors.invalid_email';
 
 export class StoreError extends Error {
     readonly i18nKey: StoreErrorKey;
@@ -202,4 +208,90 @@ export async function createStoreOrder(items: OrderItemInput[], notes?: string):
     const row = (Array.isArray(data) ? data[0] : data) as CreatedOrderRow | null | undefined;
     if (!row?.order_id || !row.order_number) throw new StoreError('store.errors.generic');
     return { orderId: row.order_id, orderNumber: row.order_number, total: Number(row.total ?? 0) };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Cuenta y pedidos del cliente (F2). Solo lee la fila ligada a `auth.uid()` (RPCs DEFINER).
+// ─────────────────────────────────────────────────────────────────
+
+export interface StoreAccount {
+    contactName: string | null;
+    phone: string | null;
+    address: string | null;
+    department: string | null;
+    municipality: string | null;
+    email: string | null;
+}
+
+export interface MyOrderItem {
+    name: string;
+    caliber: string | null;
+    quality: string | null;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+}
+
+export interface MyOrder {
+    orderNumber: string;
+    /** Estado crudo de la base (Pending, Approved, Cancelled...). La UI lo traduce. */
+    status: string;
+    total: number;
+    createdAt: string;
+    items: MyOrderItem[];
+}
+
+const asText = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v : null);
+
+/** Ejecuta un RPC del cliente: SQLSTATE 42501 => auth_required; cualquier otro fallo => generic. */
+const callCustomerRpc = async (fn: string): Promise<unknown[]> => {
+    try {
+        const { data, error } = await storeSupabase.rpc(fn);
+        if (error) {
+            throw new StoreError(error.code === '42501' ? 'store.errors.auth_required' : 'store.errors.generic');
+        }
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        throw e instanceof StoreError ? e : new StoreError('store.errors.generic');
+    }
+};
+
+export async function getMyAccount(): Promise<StoreAccount | null> {
+    const rows = (await callCustomerRpc('store_get_my_account')) as Record<string, unknown>[];
+    const row = rows[0];
+    if (!row) return null;
+    return {
+        contactName: asText(row.contact_name),
+        phone: asText(row.phone),
+        address: asText(row.address),
+        department: asText(row.department),
+        municipality: asText(row.municipality),
+        email: asText(row.email),
+    };
+}
+
+const toMyOrderItem = (raw: unknown): MyOrderItem | null => {
+    if (!raw || typeof raw !== 'object') return null;
+    const i = raw as Record<string, unknown>;
+    return {
+        name: typeof i.name === 'string' ? i.name : '',
+        caliber: asText(i.caliber),
+        quality: asText(i.quality),
+        quantity: Number(i.quantity ?? 0),
+        unitPrice: Number(i.unit_price ?? 0),
+        lineTotal: Number(i.total_price ?? 0),
+    };
+};
+
+export async function listMyOrders(): Promise<MyOrder[]> {
+    const rows = (await callCustomerRpc('store_list_my_orders')) as Record<string, unknown>[];
+    return rows.map((r) => ({
+        orderNumber: String(r.order_number ?? ''),
+        status: String(r.status ?? ''),
+        total: Number(r.total_amount ?? 0),
+        createdAt: String(r.created_at ?? ''),
+        items: Array.isArray(r.items)
+            ? r.items.map(toMyOrderItem).filter((i): i is MyOrderItem => i !== null)
+            : [],
+    }));
 }

@@ -16,7 +16,7 @@ vi.mock('../config/supabaseClient', () => {
     throw new Error('storeService NO debe importar el cliente admin');
 });
 
-import { listProducts, getProduct, createStoreOrder, StoreError } from './storeService';
+import { listProducts, getProduct, createStoreOrder, getMyAccount, listMyOrders, StoreError } from './storeService';
 
 const ROW = {
     product_key: 'abc123',
@@ -311,5 +311,116 @@ describe('storeService.createStoreOrder', () => {
 
         mocks.rpc.mockResolvedValueOnce({ data: [], error: null });
         await expect(createStoreOrder([ITEMS[0]])).rejects.toMatchObject({ i18nKey: 'store.errors.generic' });
+    });
+});
+
+describe('storeService.getMyAccount', () => {
+    it('llama store_get_my_account sin args y mapea a camelCase', async () => {
+        mocks.rpc.mockResolvedValue({
+            data: [
+                {
+                    contact_name: 'Ana Perez',
+                    phone: '70001111',
+                    address: 'Calle 1',
+                    department: 'San Salvador',
+                    municipality: 'Soyapango',
+                    email: 'ana@x.com',
+                },
+            ],
+            error: null,
+        });
+
+        const acc = await getMyAccount();
+
+        expect(mocks.rpc).toHaveBeenCalledWith('store_get_my_account');
+        expect(acc).toEqual({
+            contactName: 'Ana Perez',
+            phone: '70001111',
+            address: 'Calle 1',
+            department: 'San Salvador',
+            municipality: 'Soyapango',
+            email: 'ana@x.com',
+        });
+    });
+
+    it('sin fila => null; campos nulos se normalizan a null', async () => {
+        mocks.rpc.mockResolvedValueOnce({ data: [], error: null });
+        expect(await getMyAccount()).toBeNull();
+
+        mocks.rpc.mockResolvedValueOnce({ data: [{ contact_name: null, email: 'b@x.com' }], error: null });
+        expect(await getMyAccount()).toEqual({
+            contactName: null,
+            phone: null,
+            address: null,
+            department: null,
+            municipality: null,
+            email: 'b@x.com',
+        });
+    });
+
+    it('42501 => auth_required; otro error o red caida => generic', async () => {
+        mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'x' } });
+        await expect(getMyAccount()).rejects.toMatchObject({ i18nKey: 'store.errors.auth_required' });
+
+        mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: 'XX000', message: 'boom' } });
+        await expect(getMyAccount()).rejects.toMatchObject({ i18nKey: 'store.errors.generic' });
+
+        mocks.rpc.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+        await expect(getMyAccount()).rejects.toMatchObject({ i18nKey: 'store.errors.generic' });
+    });
+});
+
+describe('storeService.listMyOrders', () => {
+    const ORDER_ROW = {
+        order_number: 'PED-20261208-0001',
+        status: 'Pending',
+        total_amount: '37.50',
+        created_at: '2026-12-08T10:00:00Z',
+        items: [
+            { name: 'Manzana Fuji', caliber: '80', quality: 'Primera', quantity: 3, unit_price: 12.5, total_price: 37.5 },
+        ],
+    };
+
+    it('llama store_list_my_orders y mapea pedidos e items (numericos)', async () => {
+        mocks.rpc.mockResolvedValue({ data: [ORDER_ROW], error: null });
+
+        const orders = await listMyOrders();
+
+        expect(mocks.rpc).toHaveBeenCalledWith('store_list_my_orders');
+        expect(orders).toEqual([
+            {
+                orderNumber: 'PED-20261208-0001',
+                status: 'Pending',
+                total: 37.5,
+                createdAt: '2026-12-08T10:00:00Z',
+                items: [{ name: 'Manzana Fuji', caliber: '80', quality: 'Primera', quantity: 3, unitPrice: 12.5, lineTotal: 37.5 }],
+            },
+        ]);
+    });
+
+    it('items ausentes o malformados no rompen; lista vacia es []', async () => {
+        mocks.rpc.mockResolvedValueOnce({
+            data: [{ ...ORDER_ROW, order_number: 'PED-2', items: null }, { ...ORDER_ROW, order_number: 'PED-3', items: 'x' }],
+            error: null,
+        });
+        const orders = await listMyOrders();
+        expect(orders.map((o) => [o.orderNumber, o.items])).toEqual([
+            ['PED-2', []],
+            ['PED-3', []],
+        ]);
+
+        mocks.rpc.mockResolvedValueOnce({ data: [], error: null });
+        expect(await listMyOrders()).toEqual([]);
+    });
+
+    it('errores => StoreError con clave i18n, sin filtrar el mensaje de la base', async () => {
+        mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'forbidden' } });
+        const err = await listMyOrders().catch((e) => e);
+        expect(err).toBeInstanceOf(StoreError);
+        expect(err.i18nKey).toBe('store.errors.auth_required');
+        expect(err.message).not.toContain('forbidden');
+
+        mocks.rpc.mockResolvedValueOnce({ data: null, error: { code: 'XX000', message: 'boom' } });
+        await expect(listMyOrders()).rejects.toMatchObject({ i18nKey: 'store.errors.generic' });
     });
 });
