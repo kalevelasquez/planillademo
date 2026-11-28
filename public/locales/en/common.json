@@ -2423,7 +2423,10 @@
             "main": "Main navigation",
             "skip": "Skip to content",
             "logoLabel": "Teknergy, go to home",
-            "contact": "Contact"
+            "contact": "Contact",
+            "login": "Sign in",
+            "cartLabel_one": "Cart, {{count}} unit",
+            "cartLabel_other": "Cart, {{count}} units"
         },
         "landing": {
             "heroTitle": "Fresh fruit for your business",
@@ -2476,8 +2479,7 @@
                         "body": "You receive your order and pay cash at delivery."
                     }
                 },
-                "comingSoon": "Coming soon",
-                "comingSoonNote": "Online ordering will be available very soon. In the meantime, write or call us to place your order."
+                "ctaAccount": "Create account"
             },
             "contactSubtitle": "Write or call us and an advisor will help you.",
             "contact": {
@@ -2502,11 +2504,16 @@
             "loading": "Loading catalog",
             "retry": "Try again",
             "caliber": "Caliber {{value}}",
-            "orderSoon": "Order (coming soon)",
             "back": "Back to catalog",
             "priceNote": "Reference price: the salesperson confirms the total of your order.",
             "notFoundTitle": "Product not found",
-            "clearSearch": "Clear search"
+            "clearSearch": "Clear search",
+            "order": "Order",
+            "added": "Added to cart.",
+            "viewCart": "View cart",
+            "quantity": "Quantity",
+            "cartFull": "The cart already has the maximum number of different products. Finish this order to add more.",
+            "unavailableAction": "Unavailable"
         },
         "errors": {
             "store_unavailable": "The store is not available right now.",
@@ -2519,11 +2526,103 @@
             "invalid_quantity": "One of the quantities is not valid. Please review your cart.",
             "insufficient_availability": "There is not enough availability of {{product}}, please try a smaller quantity.",
             "insufficient_availability_generic": "There is not enough availability of one of the products, please try a smaller quantity.",
-            "generic": "Something went wrong. Please try again."
+            "generic": "Something went wrong. Please try again.",
+            "invalid_credentials": "Incorrect email or password.",
+            "signup_unavailable": "Sign-up is not available right now. Please try again later.",
+            "weak_password": "The password is too weak. Use at least 8 characters.",
+            "rate_limited": "Too many attempts. Wait a few minutes and try again.",
+            "invalid_email": "Enter a valid email."
         },
         "footer": {
             "rights": "All rights reserved.",
             "staffAria": "Access for company staff"
+        },
+        "cart": {
+            "title": "Your cart",
+            "empty": "Your cart is empty.",
+            "emptyCta": "View catalog",
+            "estimatedTotal": "Estimated total",
+            "priceNote": "Reference prices: the seller confirms the final total of your order.",
+            "checkout": "Continue with the order",
+            "decrease": "Decrease quantity of {{name}}",
+            "increase": "Increase quantity of {{name}}",
+            "remove": "Remove {{name}} from the cart",
+            "unitPrice": "{{price}} each",
+            "units_one": "{{count}} unit",
+            "units_other": "{{count}} units"
+        },
+        "checkout": {
+            "title": "Confirm order",
+            "cashOnDelivery": "Cash on delivery",
+            "cashOnDeliveryBody": "No online payment. You pay in cash when you receive your order. A seller reviews it and confirms it before delivery.",
+            "deliveryTo": "Deliver to",
+            "notes": "Order notes (optional)",
+            "notesPlaceholder": "Preferred time, address references…",
+            "submit": "Place order",
+            "submitting": "Placing order…",
+            "editCart": "Edit cart",
+            "emptyTitle": "Nothing to order",
+            "emptyBody": "Add products to the cart to continue.",
+            "successTitle": "Order received!",
+            "successBody": "Your order is pending confirmation. A seller will review it and contact you.",
+            "orderNumber": "Order number",
+            "estimatedNote": "Estimated total: the seller confirms the final total.",
+            "viewOrders": "View my orders",
+            "keepShopping": "Keep shopping"
+        },
+        "account": {
+            "title": "My account",
+            "loginTitle": "Sign in to your account",
+            "loginSubtitle": "With your account you can place orders and follow their status.",
+            "login": "Sign in",
+            "loggingIn": "Signing in…",
+            "register": "Create account",
+            "registering": "Creating account…",
+            "logout": "Sign out",
+            "email": "Email",
+            "password": "Password",
+            "fullName": "Full name",
+            "phone": "Phone",
+            "address": "Address (optional)",
+            "department": "Department (optional)",
+            "municipality": "Municipality (optional)",
+            "noAccount": "Don't have an account?",
+            "haveAccount": "Already have an account?",
+            "loginLink": "Sign in",
+            "registerTitle": "Create your account",
+            "registerSubtitle": "We email you a link to confirm your account before your first order.",
+            "passwordHint": "At least 8 characters.",
+            "details": "My details",
+            "checkEmailTitle": "Check your email",
+            "checkEmail": "If the email is valid, we sent you a link to confirm your account. Open it to be able to place orders.",
+            "emailConfirmedTitle": "Email confirmed",
+            "emailConfirmed": "Your account is ready. You can place your first order now.",
+            "confirmOtherDevice": "Your email is confirmed. Sign in with your email and password to continue.",
+            "confirmLinkError": "The confirmation link is invalid or expired. Try signing in or creating the account again.",
+            "goToCatalog": "Go to catalog",
+            "goToLogin": "Sign in",
+            "sessionLoading": "Loading your account",
+            "validation": {
+                "required": "This field is required",
+                "email": "Enter a valid email",
+                "passwordMin": "Password must be at least 8 characters"
+            }
+        },
+        "orders": {
+            "title": "My orders",
+            "empty": "You haven't placed any orders yet.",
+            "loading": "Loading your orders",
+            "number": "Order {{number}}",
+            "total": "Total",
+            "retry": "Retry",
+            "status": {
+                "Pending": "Pending confirmation",
+                "Approved": "Confirmed",
+                "InPreparation": "Being prepared",
+                "Delivered": "Delivered",
+                "Cancelled": "Cancelled",
+                "unknown": "In progress"
+            }
         }
     },
     "inventory": {

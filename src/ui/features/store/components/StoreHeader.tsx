@@ -1,19 +1,23 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, User } from 'lucide-react';
 import BrandLogo from '../../../../assets/images/logo-teknergy.png';
 import { ROUTES } from '../../../../config/storePaths';
 
 interface StoreHeaderProps {
     /** `true` si hay sesion INTERNA (cliente admin): muestra el acceso "Ir al panel". */
     showPanelLink?: boolean;
+    /** Unidades en el carrito local (insignia). */
+    cartCount?: number;
+    /** `true` si hay sesion de CLIENTE de tienda (Mi cuenta en vez de Ingresar). */
+    signedIn?: boolean;
 }
 
 const NAV_LINK =
     'rounded-full px-3 py-2 text-sm font-semibold text-text-secondary transition-colors hover:bg-primary-light hover:text-primary focus-visible:outline-2 focus-visible:outline-secondary aria-[current=page]:bg-primary-light aria-[current=page]:text-primary';
 
-export const StoreHeader: React.FC<StoreHeaderProps> = ({ showPanelLink = false }) => {
+export const StoreHeader: React.FC<StoreHeaderProps> = ({ showPanelLink = false, cartCount = 0, signedIn = false }) => {
     const { t } = useTranslation();
 
     return (
@@ -36,6 +40,22 @@ export const StoreHeader: React.FC<StoreHeaderProps> = ({ showPanelLink = false 
                 <nav aria-label={t('store.nav.main')} className="flex items-center gap-1">
                     <NavLink to={ROUTES.STORE} className={NAV_LINK}>
                         {t('store.nav.catalog')}
+                    </NavLink>
+                    <NavLink
+                        to={`${ROUTES.STORE}/carrito`}
+                        aria-label={t('store.nav.cartLabel', { count: cartCount })}
+                        className={`${NAV_LINK} relative inline-flex items-center gap-2`}
+                    >
+                        <ShoppingCart size={18} aria-hidden='true' />
+                        {cartCount > 0 && (
+                            <span className='inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white'>
+                                {cartCount}
+                            </span>
+                        )}
+                    </NavLink>
+                    <NavLink to={ROUTES.ACCOUNT} className={`${NAV_LINK} inline-flex items-center gap-2`}>
+                        <User size={18} aria-hidden='true' />
+                        <span className='hidden sm:inline'>{signedIn ? t('store.nav.account') : t('store.nav.login')}</span>
                     </NavLink>
                     {showPanelLink && (
                         <Link

@@ -83,11 +83,12 @@ describe('LandingPage', () => {
         expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
 
-    it('no ofrece registro ni pedido todavia: ningun boton de "Crear cuenta"/"Pedir" activo', async () => {
+    it('ofrece crear cuenta (enlace al registro) y ya no anuncia "Próximamente"', async () => {
         mocks.list.mockResolvedValue([mk('a', 'Banano')]);
         renderPage();
         await screen.findByRole('heading', { name: 'Productos destacados' });
+        expect(screen.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('href', '/cuenta/registro');
+        expect(screen.queryByText(/Próximamente/)).toBeNull();
         expect(screen.queryByRole('button')).toBeNull();
-        expect(screen.queryByRole('link', { name: /crear cuenta|registr/i })).toBeNull();
     });
 });

@@ -5,10 +5,11 @@ import { RootGate } from './ui/components/RootGate';
 import { TableSkeleton } from './ui/components/Skeleton';
 import ReloadPrompt from './ui/components/ReloadPrompt';
 import { ROUTES, hasAuthLinkParams } from './config/storePaths';
+import { StoreAuthGuard } from './ui/features/store/components/StoreAuthGuard';
 
 /**
  * Router delgado. Cada shell se carga lazy y trae su propio cliente Supabase:
- *  - "/", /tienda, /tienda/p/:key  PublicApp lazy (landing y catalogo), SIN bootstrap admin
+ *  - "/", /tienda/*, /cuenta/*    PublicApp lazy (landing, catalogo, carrito, checkout, cuenta), SIN bootstrap admin
  *  - todo lo demas                 AdminApp lazy (dashboard en /inicio; rutas admin sin cambios)
  *
  * Excepcion en "/": si la URL trae un enlace de email de Supabase del flujo admin (invitacion,
@@ -23,6 +24,12 @@ const PublicApp = lazyWithRetry(() => import('./ui/features/store/PublicApp'));
 const LandingPage = lazyWithRetry(() => import('./ui/features/store/pages/LandingPage'));
 const CatalogPage = lazyWithRetry(() => import('./ui/features/store/pages/CatalogPage'));
 const ProductDetailPage = lazyWithRetry(() => import('./ui/features/store/pages/ProductDetailPage'));
+const CartPage = lazyWithRetry(() => import('./ui/features/store/pages/CartPage'));
+const CheckoutPage = lazyWithRetry(() => import('./ui/features/store/pages/CheckoutPage'));
+const AccountPage = lazyWithRetry(() => import('./ui/features/store/pages/AccountPage'));
+const RegisterPage = lazyWithRetry(() => import('./ui/features/store/pages/RegisterPage'));
+const EmailConfirmedPage = lazyWithRetry(() => import('./ui/features/store/pages/EmailConfirmedPage'));
+const MyOrdersPage = lazyWithRetry(() => import('./ui/features/store/pages/MyOrdersPage'));
 
 const ShellFallback = () => (
   <div role="status" className="min-h-screen flex items-center justify-center">
@@ -48,6 +55,14 @@ export function AppRoutes() {
           <Route path={ROUTES.LANDING} element={<LandingPage />} />
           <Route path={ROUTES.STORE} element={<CatalogPage />} />
           <Route path={`${ROUTES.STORE}/p/:productKey`} element={<ProductDetailPage />} />
+          <Route path={`${ROUTES.STORE}/carrito`} element={<CartPage />} />
+          <Route path={ROUTES.ACCOUNT} element={<AccountPage />} />
+          <Route path={`${ROUTES.ACCOUNT}/registro`} element={<RegisterPage />} />
+          <Route path={`${ROUTES.ACCOUNT}/confirmado`} element={<EmailConfirmedPage />} />
+          <Route element={<StoreAuthGuard />}>
+            <Route path={`${ROUTES.STORE}/checkout`} element={<CheckoutPage />} />
+            <Route path={`${ROUTES.ACCOUNT}/pedidos`} element={<MyOrdersPage />} />
+          </Route>
         </Route>
         <Route
           path="*"

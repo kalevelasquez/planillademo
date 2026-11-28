@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPrice, formatPhone, pickFeatured } from './storeFormat';
+import { formatPrice, formatPhone, pickFeatured, formatOrderDate } from './storeFormat';
 import type { StoreProduct } from '../../../../services/storeService';
 
 const p = (over: Partial<StoreProduct>): StoreProduct => ({
@@ -61,5 +61,21 @@ describe('formatPhone', () => {
 
     it('un numero con otro formato se devuelve con "+" sin inventar separadores', () => {
         expect(formatPhone('12025550123')).toBe('+12025550123');
+    });
+});
+
+describe('formatOrderDate', () => {
+    it('formatea en la zona de El Salvador (UTC-6) segun el idioma', () => {
+        expect(formatOrderDate('2026-12-08T10:00:00Z', 'es')).toMatch(/8.*dic.*2026/i);
+        expect(formatOrderDate('2026-12-08T10:00:00Z', 'en')).toMatch(/Dec.*8.*2026/);
+    });
+
+    it('usa la zona local, no UTC: 03:00Z del dia 9 sigue siendo dia 8 en El Salvador', () => {
+        expect(formatOrderDate('2026-12-09T03:00:00Z', 'es')).toMatch(/8.*dic/i);
+    });
+
+    it('fecha invalida => cadena vacia (nunca "Invalid Date")', () => {
+        expect(formatOrderDate('no-es-fecha', 'es')).toBe('');
+        expect(formatOrderDate('', 'es')).toBe('');
     });
 });

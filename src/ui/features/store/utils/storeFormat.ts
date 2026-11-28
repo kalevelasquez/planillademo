@@ -5,6 +5,16 @@ const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' 
 /** Precio de catalogo en USD ("$12.50"). Un valor no finito se muestra como $0.00 (nunca "NaN"). */
 export const formatPrice = (value: number): string => usd.format(Number.isFinite(value) ? value : 0);
 
+/** Fecha del pedido en la zona del negocio (El Salvador, UTC-6 sin DST). Invalida => "". */
+export const formatOrderDate = (iso: string, language: string): string => {
+    const date = new Date(iso);
+    if (!iso || Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-SV', {
+        dateStyle: 'medium',
+        timeZone: 'America/El_Salvador',
+    }).format(date);
+};
+
 /** Telefono DB (503XXXXXXXX, sin "+") a formato legible. Otros formatos: solo se antepone "+". */
 export const formatPhone = (raw: string): string => {
     const digits = raw.replace(/\D/g, '');

@@ -2429,7 +2429,10 @@
             "main": "Navegación principal",
             "skip": "Saltar al contenido",
             "logoLabel": "Teknergy, ir al inicio",
-            "contact": "Contacto"
+            "contact": "Contacto",
+            "login": "Ingresar",
+            "cartLabel_one": "Carrito, {{count}} unidad",
+            "cartLabel_other": "Carrito, {{count}} unidades"
         },
         "landing": {
             "heroTitle": "Fruta fresca para tu negocio",
@@ -2482,8 +2485,7 @@
                         "body": "Recibís tu pedido y pagás en efectivo al momento de la entrega."
                     }
                 },
-                "comingSoon": "Próximamente",
-                "comingSoonNote": "Los pedidos en línea estarán disponibles muy pronto. Mientras tanto, escribinos o llamanos para hacer tu pedido."
+                "ctaAccount": "Crear cuenta"
             },
             "contactSubtitle": "Escribinos o llamanos y un asesor te atiende.",
             "contact": {
@@ -2508,11 +2510,16 @@
             "loading": "Cargando catálogo",
             "retry": "Reintentar",
             "caliber": "Calibre {{value}}",
-            "orderSoon": "Pedir (próximamente)",
             "back": "Volver al catálogo",
             "priceNote": "Precio de referencia: el vendedor confirma el total de tu pedido.",
             "notFoundTitle": "Producto no encontrado",
-            "clearSearch": "Limpiar búsqueda"
+            "clearSearch": "Limpiar búsqueda",
+            "order": "Pedir",
+            "added": "Agregado al carrito.",
+            "viewCart": "Ver carrito",
+            "quantity": "Cantidad",
+            "cartFull": "El carrito ya tiene el máximo de productos distintos. Finalizá este pedido para agregar más.",
+            "unavailableAction": "No disponible"
         },
         "errors": {
             "store_unavailable": "La tienda no está disponible por el momento.",
@@ -2525,11 +2532,103 @@
             "invalid_quantity": "Alguna cantidad no es válida. Revisá el carrito.",
             "insufficient_availability": "No hay suficiente disponibilidad de {{product}}, probá con una cantidad menor.",
             "insufficient_availability_generic": "No hay suficiente disponibilidad de uno de los productos, probá con una cantidad menor.",
-            "generic": "Ocurrió un error inesperado. Intentá de nuevo."
+            "generic": "Ocurrió un error inesperado. Intentá de nuevo.",
+            "invalid_credentials": "Correo o contraseña incorrectos.",
+            "signup_unavailable": "El registro no está disponible por el momento. Intentá más tarde.",
+            "weak_password": "La contraseña es muy débil. Usá al menos 8 caracteres.",
+            "rate_limited": "Demasiados intentos. Esperá unos minutos e intentá de nuevo.",
+            "invalid_email": "Ingresá un correo válido."
         },
         "footer": {
             "rights": "Todos los derechos reservados.",
             "staffAria": "Acceso para el personal de la empresa"
+        },
+        "cart": {
+            "title": "Tu carrito",
+            "empty": "Tu carrito está vacío.",
+            "emptyCta": "Ver catálogo",
+            "estimatedTotal": "Total estimado",
+            "priceNote": "Precios de referencia: el vendedor confirma el total final de tu pedido.",
+            "checkout": "Continuar con el pedido",
+            "decrease": "Disminuir cantidad de {{name}}",
+            "increase": "Aumentar cantidad de {{name}}",
+            "remove": "Quitar {{name}} del carrito",
+            "unitPrice": "{{price}} c/u",
+            "units_one": "{{count}} unidad",
+            "units_other": "{{count}} unidades"
+        },
+        "checkout": {
+            "title": "Confirmar pedido",
+            "cashOnDelivery": "Pago contra entrega",
+            "cashOnDeliveryBody": "No se paga en línea. Pagás en efectivo cuando recibís tu pedido. Un vendedor lo revisa y te lo confirma antes de la entrega.",
+            "deliveryTo": "Entrega a",
+            "notes": "Notas para el pedido (opcional)",
+            "notesPlaceholder": "Horario preferido, referencias de la dirección…",
+            "submit": "Enviar pedido",
+            "submitting": "Enviando pedido…",
+            "editCart": "Editar carrito",
+            "emptyTitle": "No hay nada para pedir",
+            "emptyBody": "Agregá productos al carrito para continuar.",
+            "successTitle": "¡Pedido recibido!",
+            "successBody": "Tu pedido quedó pendiente de confirmación. Un vendedor lo va a revisar y te va a contactar.",
+            "orderNumber": "Número de pedido",
+            "estimatedNote": "Total estimado: el vendedor confirma el total final.",
+            "viewOrders": "Ver mis pedidos",
+            "keepShopping": "Seguir comprando"
+        },
+        "account": {
+            "title": "Mi cuenta",
+            "loginTitle": "Ingresá a tu cuenta",
+            "loginSubtitle": "Con tu cuenta podés hacer pedidos y seguir su estado.",
+            "login": "Ingresar",
+            "loggingIn": "Ingresando…",
+            "register": "Crear cuenta",
+            "registering": "Creando cuenta…",
+            "logout": "Cerrar sesión",
+            "email": "Correo electrónico",
+            "password": "Contraseña",
+            "fullName": "Nombre completo",
+            "phone": "Teléfono",
+            "address": "Dirección (opcional)",
+            "department": "Departamento (opcional)",
+            "municipality": "Municipio (opcional)",
+            "noAccount": "¿No tenés cuenta?",
+            "haveAccount": "¿Ya tenés cuenta?",
+            "loginLink": "Ingresá",
+            "registerTitle": "Creá tu cuenta",
+            "registerSubtitle": "Te enviamos un correo para confirmar tu cuenta antes de tu primer pedido.",
+            "passwordHint": "Mínimo 8 caracteres.",
+            "details": "Mis datos",
+            "checkEmailTitle": "Revisá tu correo",
+            "checkEmail": "Si el correo es válido, te enviamos un enlace para confirmar tu cuenta. Abrilo para poder hacer pedidos.",
+            "emailConfirmedTitle": "Correo confirmado",
+            "emailConfirmed": "Tu cuenta está lista. Ya podés hacer tu primer pedido.",
+            "confirmOtherDevice": "Tu correo quedó confirmado. Ingresá con tu correo y contraseña para continuar.",
+            "confirmLinkError": "El enlace de confirmación no es válido o venció. Intentá ingresar o crear la cuenta de nuevo.",
+            "goToCatalog": "Ir al catálogo",
+            "goToLogin": "Ingresar",
+            "sessionLoading": "Cargando tu cuenta",
+            "validation": {
+                "required": "Este campo es obligatorio",
+                "email": "Ingresá un correo válido",
+                "passwordMin": "La contraseña debe tener al menos 8 caracteres"
+            }
+        },
+        "orders": {
+            "title": "Mis pedidos",
+            "empty": "Todavía no hiciste ningún pedido.",
+            "loading": "Cargando tus pedidos",
+            "number": "Pedido {{number}}",
+            "total": "Total",
+            "retry": "Reintentar",
+            "status": {
+                "Pending": "Pendiente de confirmación",
+                "Approved": "Confirmado",
+                "InPreparation": "En preparación",
+                "Delivered": "Entregado",
+                "Cancelled": "Cancelado",
+                "unknown": "En proceso"
+            }
         }
     },
     "inventory": {

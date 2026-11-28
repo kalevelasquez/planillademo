@@ -1,18 +1,70 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { ROUTES } from '../../../../config/storePaths';
+import { useCartStore } from '../../../../store/cartStore';
+import type { StoreProduct } from '../../../../services/storeService';
 import { useProduct } from '../hooks/useProduct';
 import { formatPrice } from '../utils/storeFormat';
 import { ProductImage } from '../components/ProductImage';
 import { AvailabilityBadge } from '../components/AvailabilityBadge';
 import { StoreNotice } from '../components/StoreNotice';
+import { QuantityStepper } from '../components/QuantityStepper';
+import { SECONDARY_LINK_BTN } from '../utils/storeStyles';
 
 const BACK_LINK =
     'inline-flex items-center gap-2 rounded-full font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary';
 
-/** `/tienda/p/:productKey`: detalle de un grupo del catalogo. Pedir llega en C2 (hoy deshabilitado). */
+const ORDER_BTN =
+    'inline-flex h-12 items-center rounded-full bg-primary px-lg font-display font-bold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary disabled:cursor-not-allowed disabled:opacity-50';
+
+/** Cantidad + 'Pedir' (agrega al carrito local). Agotado no se puede pedir. */
+const OrderControls: React.FC<{ product: StoreProduct }> = ({ product }) => {
+    const { t } = useTranslation();
+    const add = useCartStore((s) => s.add);
+    const [qty, setQty] = useState(1);
+    const [feedback, setFeedback] = useState<'added' | 'limit' | null>(null);
+
+    if (product.availability !== 'Disponible') {
+        return (
+            <button type='button' disabled className={ORDER_BTN}>
+                {t('store.catalog.unavailableAction')}
+            </button>
+        );
+    }
+
+    const handleOrder = () => {
+        const result = add(product, qty);
+        setFeedback(result === 'added' ? 'added' : result === 'limit' ? 'limit' : null);
+    };
+
+    return (
+        <div className='flex flex-col items-start gap-sm'>
+            <div className='flex flex-wrap items-center gap-md'>
+                <QuantityStepper name={product.name} value={qty} onChange={setQty} />
+                <button type='button' onClick={handleOrder} className={ORDER_BTN}>
+                    {t('store.catalog.order')}
+                </button>
+            </div>
+            {feedback === 'added' && (
+                <p role='status' className='flex flex-wrap items-center gap-sm font-medium text-success-dark'>
+                    {t('store.catalog.added')}
+                    <Link to={`${ROUTES.STORE}/carrito`} className={SECONDARY_LINK_BTN}>
+                        {t('store.catalog.viewCart')}
+                    </Link>
+                </p>
+            )}
+            {feedback === 'limit' && (
+                <p role='alert' className='text-sm font-medium text-error-dark'>
+                    {t('store.catalog.cartFull')}
+                </p>
+            )}
+        </div>
+    );
+};
+
+/** `/tienda/p/:productKey`: detalle de un grupo del catalogo y alta al carrito. */
 const ProductDetailPage: React.FC = () => {
     const { t } = useTranslation();
     const { productKey = '' } = useParams();
@@ -86,13 +138,7 @@ const ProductDetailPage: React.FC = () => {
 
                         <p className="text-sm text-text-secondary">{t('store.catalog.priceNote')}</p>
 
-                        <button
-                            type="button"
-                            disabled
-                            className="inline-flex h-12 items-center rounded-full bg-primary px-lg font-display font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            {t('store.catalog.orderSoon')}
-                        </button>
+                        <OrderControls key={product.productKey} product={product} />
                     </div>
                 </article>
             )}

@@ -154,8 +154,38 @@ describe('App (router delgado)', () => {
         });
     });
 
+    describe('cuenta y carrito (shell publico, NO admin)', () => {
+        it.each([
+            ['/cuenta', 'Ingresá a tu cuenta'],
+            ['/cuenta/registro', 'Creá tu cuenta'],
+            ['/cuenta/confirmado', 'Correo confirmado'],
+            ['/tienda/carrito', 'Tu carrito'],
+        ])('%s monta la pagina publica sin AdminApp ni bootstrap admin', async (path, heading) => {
+            renderAt(path);
+            expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+            expect(screen.getByTestId('loc')).toHaveTextContent(path);
+            expect(screen.queryByTestId('admin-app')).not.toBeInTheDocument();
+            expect(getBootstrapData).not.toHaveBeenCalled();
+        });
+
+        it.each(['/tienda/checkout', '/cuenta/pedidos'])(
+            '%s sin sesion de tienda va al login de /cuenta (no al login admin)',
+            async (path) => {
+                renderAt(path);
+                expect(await screen.findByRole('heading', { level: 1, name: 'Ingresá a tu cuenta' })).toBeInTheDocument();
+                await waitFor(() => expect(screen.getByTestId('loc')).toHaveTextContent(/^\/cuenta$/));
+                expect(screen.queryByTestId('admin-app')).not.toBeInTheDocument();
+            },
+        );
+
+        it('/cuenta/<ruta desconocida> cae al shell admin', async () => {
+            renderAt('/cuenta/otra/cosa');
+            expect(await screen.findByTestId('admin-app')).toBeInTheDocument();
+        });
+    });
+
     describe('rutas admin intactas', () => {
-        it.each(['/inventario', '/inicio', '/login', '/planilla/empleados', '/administrar/usuarios', '/reset-password', '/pedidos/123', '/cuenta'])(
+        it.each(['/inventario', '/inicio', '/login', '/planilla/empleados', '/administrar/usuarios', '/reset-password', '/pedidos/123'])(
             '%s monta AdminApp sin pasar por el gate de "/" ni la landing',
             async (path) => {
                 renderAt(path);

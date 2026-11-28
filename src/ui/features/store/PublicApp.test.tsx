@@ -2,10 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
+const { getSession, getStoreSession, subscribeStoreAuth } = vi.hoisted(() => ({
+    getSession: vi.fn(),
+    getStoreSession: vi.fn(),
+    subscribeStoreAuth: vi.fn(),
+}));
 vi.mock('../../../config/supabaseClient', () => ({ supabase: { auth: { getSession } } }));
 
+vi.mock('../../../services/storeAuthService', () => ({
+    getStoreSession,
+    subscribeStoreAuth,
+    signOutStoreCustomer: vi.fn(),
+}));
+
 import PublicApp from './PublicApp';
+import { useCartStore } from '../../../store/cartStore';
+import { useStoreSessionStore } from '../../../store/storeSessionStore';
 
 const renderShell = (entry = '/tienda') =>
     render(
@@ -19,8 +31,13 @@ const renderShell = (entry = '/tienda') =>
     );
 
 beforeEach(() => {
+    useStoreSessionStore.getState().reset();
     vi.clearAllMocks();
+    useCartStore.getState().clear();
+    localStorage.clear();
     getSession.mockResolvedValue({ data: { session: null } });
+    getStoreSession.mockResolvedValue(null);
+    subscribeStoreAuth.mockReturnValue(() => {});
 });
 
 describe('PublicApp (shell publico)', () => {
@@ -45,5 +62,27 @@ describe('PublicApp (shell publico)', () => {
         renderShell();
         expect(await screen.findByRole('link', { name: 'Ir al panel' })).toHaveAttribute('href', '/inicio');
         expect(screen.getByRole('main')).toHaveTextContent('contenido de prueba');
+    });
+
+    it('inicia la sesion de TIENDA una sola vez (independiente de la sesion admin)', async () => {
+        renderShell();
+        await waitFor(() => expect(getStoreSession).toHaveBeenCalledTimes(1));
+        expect(subscribeStoreAuth).toHaveBeenCalledTimes(1);
+    });
+
+    it('el header refleja el carrito local y la sesion de cliente', async () => {
+        useCartStore.getState().add({ productKey: 'k', name: 'Pera', caliber: null, quality: null, price: 2, imageUrl: null, availability: 'Disponible' }, 4);
+        getStoreSession.mockResolvedValue({ user: { id: 'c1' } });
+        renderShell();
+        expect(screen.getByRole('link', { name: 'Carrito, 4 unidades' })).toHaveAttribute('href', '/tienda/carrito');
+        expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toHaveAttribute('href', '/cuenta');
+    });
+
+    it('sesion de cliente y sesion admin conviven: ambos accesos se muestran', async () => {
+        getSession.mockResolvedValue({ data: { session: { user: { id: 'staff' } } } });
+        getStoreSession.mockResolvedValue({ user: { id: 'c1' } });
+        renderShell();
+        expect(await screen.findByRole('link', { name: 'Ir al panel' })).toBeInTheDocument();
+        expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
     });
 });

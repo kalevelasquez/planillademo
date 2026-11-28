@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Tienda publica (F1): landing, catalogo y frontera con el shell admin. Todo anon: no necesita
- * credenciales ni crea datos.
+ * Tienda publica (F1/F2): landing, catalogo, carrito, cuenta y frontera con el shell admin. Todo anon:
+ * no necesita credenciales ni crea datos (el registro NO se envia: el signup se habilita en C3).
  *
  * El catalogo depende de `VITE_STORE_TENANT_ID` y de `tenants.store_enabled` del entorno bajo
  * prueba. Para no acoplar el spec a ese dato, el catalogo se acepta en cualquiera de sus tres
@@ -26,10 +26,12 @@ test.describe('Tienda publica (anon)', () => {
         await expect(page).toHaveURL(/\/tienda$/);
     });
 
-    test('la landing no ofrece registro ni pedido todavia (F2)', async ({ page }) => {
+    test('la landing ofrece crear cuenta (el pedido en linea ya esta disponible)', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('Próximamente').first()).toBeVisible();
-        await expect(page.getByRole('link', { name: /crear cuenta|registr/i })).toHaveCount(0);
+        await expect(page.getByText('Próximamente')).toHaveCount(0);
+        await page.getByRole('link', { name: 'Crear cuenta' }).click();
+        await expect(page).toHaveURL(/\/cuenta\/registro$/);
+        await expect(page.getByRole('heading', { level: 1, name: 'Creá tu cuenta' })).toBeVisible();
     });
 
     test('el catalogo carga en uno de sus estados validos y nunca muestra cantidades', async ({ page }) => {
@@ -54,6 +56,43 @@ test.describe('Tienda publica (anon)', () => {
         await page.goto('/');
         await page.getByRole('link', { name: 'Acceso empleados' }).click();
         await expect(page).toHaveURL(/\/login$/);
+    });
+});
+
+test.describe('Cuenta y carrito (anon)', () => {
+    test('el carrito vacio muestra el aviso y lleva al catalogo', async ({ page }) => {
+        await page.goto('/tienda/carrito');
+        await expect(page.getByRole('heading', { level: 1, name: 'Tu carrito' })).toBeVisible();
+        await expect(page.getByText('Tu carrito está vacío.')).toBeVisible();
+        await page.getByRole('link', { name: 'Ver catálogo' }).last().click();
+        await expect(page).toHaveURL(/\/tienda$/);
+    });
+
+    test('/cuenta muestra el login de TIENDA (no el del panel) con enlace a crear cuenta', async ({ page }) => {
+        await page.goto('/cuenta');
+        await expect(page).toHaveURL(/\/cuenta$/);
+        await expect(page.getByRole('heading', { level: 1, name: 'Ingresá a tu cuenta' })).toBeVisible();
+        await expect(page.getByLabel('Correo electrónico')).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('href', '/cuenta/registro');
+    });
+
+    test('el checkout sin sesion de tienda redirige a /cuenta (no a /login del panel)', async ({ page }) => {
+        await page.goto('/tienda/checkout');
+        await expect(page).toHaveURL(/\/cuenta$/);
+        await expect(page.getByRole('heading', { level: 1, name: 'Ingresá a tu cuenta' })).toBeVisible();
+    });
+
+    test('el formulario de registro valida campos obligatorios sin llamar al servidor', async ({ page }) => {
+        await page.goto('/cuenta/registro');
+        await page.getByRole('button', { name: 'Crear cuenta' }).click();
+        await expect(page.getByText('Este campo es obligatorio').first()).toBeVisible();
+        await expect(page).toHaveURL(/\/cuenta\/registro$/);
+    });
+
+    test('/cuenta/confirmado sin sesion invita a ingresar', async ({ page }) => {
+        await page.goto('/cuenta/confirmado');
+        await expect(page.getByRole('heading', { level: 1, name: 'Correo confirmado' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Ingresar' }).last()).toHaveAttribute('href', '/cuenta');
     });
 });
 

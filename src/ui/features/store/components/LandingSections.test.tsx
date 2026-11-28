@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { ValueProps } from './ValueProps';
 import { HowItWorks } from './HowItWorks';
 
@@ -14,9 +15,16 @@ describe('ValueProps', () => {
     });
 });
 
+const renderHow = () =>
+    render(
+        <MemoryRouter>
+            <HowItWorks />
+        </MemoryRouter>,
+    );
+
 describe('HowItWorks', () => {
     it('muestra los 4 pasos en orden: cuenta, pedido, confirmacion del vendedor, pago contra entrega', () => {
-        render(<HowItWorks />);
+        renderHow();
         const section = screen.getByRole('region', { name: 'Cómo pedir' });
         expect(section).toHaveAttribute('id', 'como-pedir');
         const steps = within(screen.getByRole('list')).getAllByRole('listitem');
@@ -27,11 +35,10 @@ describe('HowItWorks', () => {
         expect(within(steps[3]).getByText('Pagás contra entrega')).toBeInTheDocument();
     });
 
-    it('avisa que pedir en linea es "Próximamente" y NO ofrece botones de crear cuenta ni pedir', () => {
-        render(<HowItWorks />);
-        expect(screen.getByText(/Los pedidos en línea estarán disponibles muy pronto/)).toBeInTheDocument();
-        expect(screen.getAllByText('Próximamente').length).toBeGreaterThanOrEqual(1);
-        expect(screen.queryByRole('button')).toBeNull();
-        expect(screen.queryByRole('link')).toBeNull();
+    it('ya NO dice Próximamente: el pedido en línea esta disponible y se ofrece crear cuenta', () => {
+        renderHow();
+        expect(screen.queryByText(/Próximamente/)).toBeNull();
+        expect(screen.queryByText(/estarán disponibles muy pronto/)).toBeNull();
+        expect(screen.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('href', '/cuenta/registro');
     });
 });
